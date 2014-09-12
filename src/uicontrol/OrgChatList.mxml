@@ -1,0 +1,280 @@
+<?xml version="1.0"?>
+<!--
+  Created by wangjian2254 on 14-8-10.
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:uicontrol="uicontrol.*" creationComplete="init()" gap="3">
+    <fx:Metadata>
+        [Event(name="listItemClick",type="events.ListClickEvent")]
+        [Event(name="listItemZhanKai",type="events.ListClickEvent")]
+    </fx:Metadata>
+    <fx:Script><![CDATA[
+        import events.ListClickEvent;
+
+        import mx.collections.ArrayCollection;
+        import mx.events.CollectionEvent;
+        import mx.utils.ObjectUtil;
+
+
+        import util.ChatManager;
+
+        import util.ToolUtil;
+
+        [Bindable]
+        private var addressMember:ArrayCollection = new ArrayCollection();
+
+        [Bindable]
+        private var departMember:ArrayCollection = new ArrayCollection();
+        [Bindable]
+        private var userMember:ArrayCollection = new ArrayCollection();
+
+        [Bindable]
+        private var btnlist:ArrayCollection=new ArrayCollection([{label:"最近联系",mod:"group"},{label:"部门",mod:"org"},{label:"常用联系人",mod:"user"}]);;
+
+        public var type:String = "org";
+
+        [Bindable]
+        public var borderVisible:Boolean = true;
+
+        public function init():void {
+            if(type=="org"){
+                this.removeElement(showModel);
+                this.removeElement(liyuwangBtn);
+            }
+            ToolUtil.departMentList.addEventListener(CollectionEvent.COLLECTION_CHANGE, initDepartment);
+            ToolUtil.contactsList.addEventListener(CollectionEvent.COLLECTION_CHANGE, initMember);
+            initDepartment(null);
+            initMember(null);
+            if(type=="chat"){
+                if(ToolUtil.groupList.length==0){
+                    showModel.selectedIndex=1;
+                }
+                changeShowModel();
+            }
+
+            head.source = ChatManager.liyu['icon'];
+            nameLabel.text = ChatManager.liyu['name'];
+
+        }
+
+
+//        private function unReadChange(e:CollectionEvent):void{
+//            for each(var p:Object in addressMember){
+//                p.unread=0;
+//                for each(var chat:Object in ChatManager.unReadMessage){
+//                    if((p.hasOwnProperty('flag')&&chat.o==p.id)||(!p.hasOwnProperty('flag')&&chat.t==p.id)){
+//                        if(chat.unread){
+//                            p.unread+=1;
+//                        }
+//
+//                    }
+//                }
+//            }
+//            addressMember.refresh();
+//        }
+
+
+        private function initDepartment(e:CollectionEvent):void{
+            if(type == "chat"){
+                departMember.removeAll();
+                var l2:ArrayCollection = ObjectUtil.copy(ToolUtil.departMentList) as ArrayCollection;
+                var f:Boolean = false;
+                for each(var item2:Object in l2) {
+                    f = false;
+                    for each(var p:Object in item2.members) {
+                        if (p.id == ToolUtil.sessionUser.pid) {
+                            f = true;
+                        }
+                    }
+                    if (f) {
+                        item2.level = 0;
+                        item2.unread = 0;
+                        departMember.addItem(item2);
+                    }
+
+                }
+                departMember.refresh();
+            }
+            if (type == "org") {
+                addressMember.removeAll();
+                var l:ArrayCollection = ObjectUtil.copy(ToolUtil.departMentList) as ArrayCollection;
+                var depart:Object = new Object();
+                var rootDepart:Object = null;
+                for each(var item:Object in l) {
+                    depart['d' + item.id] = item;
+                    if (!item.father) {
+                        rootDepart = item;
+                        item.level = 0;
+                    }
+                    item.childrenstatus = true;
+                    item.children = new ArrayCollection();
+                    item.hideicon=false;
+                }
+                if(rootDepart!=null){
+                    ToolUtil.findDepartByFather(rootDepart,l);
+                }
+
+                for each(item in l) {
+                    if (item.father) {
+                        item.level = depart['d' + item.father].level + 1;
+                        if (!depart['d' + item.father].hasOwnProperty('dep_children')) {
+                            depart['d' + item.father].dep_children = new ArrayCollection();
+                        }
+                        depart['d' + item.father].dep_children.addItem(item);
+                    }
+                    for each(var m:Object in item.members) {
+                        m['depart_id'] = item.id;
+                        m['level'] = item.level + 1;
+                    }
+                    item.children.addAll(new ArrayCollection(item.members as Array));
+                    item.name = item.name+" ("+item.children.length+")";
+                }
+                for each(item in l) {
+                    if (item.flag == 'free') {
+                        depart['d' + item.father].dep_children.removeItemAt(depart['d' + item.father].dep_children.getItemIndex(item));
+                        depart['d' + item.father].dep_children.addItem(item);
+                    }
+                }
+
+                if (rootDepart != null) {
+                    addressMember.addItem(rootDepart);
+                    showDepartChildren_handler(rootDepart);
+                }
+                addressList.dataProvider = addressMember;
+            }
+        }
+        private function initMember(e:CollectionEvent):void{
+            if(type == "chat"){
+                var members:ArrayCollection = ObjectUtil.copy(ToolUtil.contactsList) as ArrayCollection;
+
+                for each(var member:Object in members) {
+                    member['level'] = 0;
+                    member['unread'] = 0;
+                }
+                userMember=members;
+                userMember.refresh();
+            }
+        }
+
+
+
+
+
+        private function showDepartChildren_handler(depart:Object):void {
+            var index:int = 0;
+            for (var i:int = 0; i < addressMember.length; i++) {
+                if (depart.id == addressMember.getItemAt(i).id) {
+                    index = i;
+                    break;
+                }
+            }
+            if (depart.hasOwnProperty('dep_children')){
+                if (index == addressMember.length - 1 && addressMember.length != 1) {
+                    addressMember.addAll(depart.dep_children);
+                } else {
+                    addressMember.addAllAt(depart.dep_children, index + 1);
+                }
+                for each(var d:Object in depart.dep_children){
+                    showDepartChildren_handler(d);
+                }
+            }
+
+
+
+        }
+
+        private function chatliyu():void{
+            var listclickevent:ListClickEvent=new ListClickEvent("listItemClick",ChatManager.liyu);
+            dispatchEvent(listclickevent);
+        }
+
+        //        private function listItemClick_handler(e:ListClickEvent):void{
+        //            dispatchEvent(e);
+        //
+        //        }
+        private function listItemZhanKai_handler(e:ListClickEvent):void {
+            var depart:Object = e.data;
+            var index:int = 0;
+            for (var i:int = 0; i < addressMember.length; i++) {
+                if (depart.id == addressMember.getItemAt(i).id) {
+                    index = i;
+                    break;
+                }
+            }
+            var childrenDepart:ArrayCollection;
+            if (depart.hasOwnProperty('childrenstatus') && depart['childrenstatus']) {
+                depart['childrenstatus'] = false;
+                childrenDepart = depart.children;
+
+                if (index == addressMember.length - 1 && addressMember.length != 1) {
+                    addressMember.addAll(childrenDepart);
+                } else {
+                    addressMember.addAllAt(childrenDepart, index + 1);
+                }
+            } else if (depart.hasOwnProperty('childrenstatus') && !depart['childrenstatus']) {
+                depart['childrenstatus'] = true;
+                var dellist:Array = new Array();
+                dellist.push(depart);
+                deleteChildren(addressMember, dellist);
+            }
+
+        }
+
+        private function deleteChildren(list:ArrayCollection, items:Array):void {
+            var tempDepart:Object;
+            var dellist:Array = new Array();
+            for each(var item:Object in items) {
+                for (var k:int = list.length - 1; k >= 0; k--) {
+                    tempDepart = list.getItemAt(k);
+//                    if((tempDepart.hasOwnProperty('father')&&tempDepart.father==item.id)||(tempDepart.hasOwnProperty('depart_id')&&tempDepart.depart_id==item.id)){
+                    if (tempDepart.hasOwnProperty('depart_id') && tempDepart.depart_id == item.id) {
+                        if (tempDepart.hasOwnProperty('flag')) {
+                            if (tempDepart.hasOwnProperty('childrenstatus')) {
+                                tempDepart.childrenstatus = true;
+                            }
+                            dellist.push(tempDepart);
+                        }
+
+                        list.removeItemAt(k);
+                    }
+                }
+            }
+            if (dellist.length > 0) {
+                deleteChildren(list, dellist);
+            }
+
+
+        }
+
+        private function changeShowModel():void{
+            if(showModel.selectedItem.mod=="org"){
+               addressList.dataProvider = departMember;
+            }
+            if(showModel.selectedItem.mod=="user"){
+                addressList.dataProvider = userMember;
+            }
+            if(showModel.selectedItem.mod=="group"){
+                addressList.dataProvider =  ToolUtil.groupList;
+            }
+        }
+        ]]></fx:Script>
+
+    <s:ButtonBar id="showModel" change="changeShowModel()" dataProvider="{btnlist}" width="100%" height="25" selectedIndex="0" chromeColor="#faf0cc"   labelField="label" />
+    <s:HGroup id="liyuwangBtn" click="chatliyu()"  verticalAlign="middle"   width="100%" height="50" buttonMode="true"  >
+        <s:Image id="head" width="45" height="45"></s:Image>
+        <s:Label id="nameLabel" ></s:Label>
+        <s:BorderContainer id="num" visible="{ChatManager.liyuShow}" minWidth="15" height="15" cornerRadius="7" borderVisible="false" backgroundColor="#ff0000">
+            <s:layout>
+                <s:HorizontalLayout verticalAlign="middle" horizontalAlign="center"></s:HorizontalLayout>
+            </s:layout>
+            <s:Label id="numLabel" text="{ChatManager.liyuunread}" fontSize="12" color="#ffffff" ></s:Label>
+        </s:BorderContainer>
+
+    </s:HGroup>
+    <uicontrol:AddressList id="addressList" dataProvider="{departMember}" borderVisible="{borderVisible}}"
+                           listItemZhanKai="listItemZhanKai_handler(event)"
+                           horizontalScrollPolicy="off"
+                           itemRenderer="uicontrol.renderer.AddressItemRenderer" width="100%" height="100%">
+
+    </uicontrol:AddressList>
+</s:VGroup>

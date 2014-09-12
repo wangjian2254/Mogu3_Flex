@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="init()" width="400" height="300" backgroundAlpha="0" borderVisible="true">
+	<s:layout>
+		<s:HorizontalLayout horizontalAlign="left" gap="1"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+        import control.CBorderContainer;
+
+        import events.ChangeTabButtonEvent;
+        import events.CloseEvent;
+        import events.CloseTabButtonEvent;
+
+        import mx.containers.ViewStack;
+
+        private var _dataProvider:ViewStack;
+
+        public function get dataProvider():ViewStack {
+            return _dataProvider;
+        }
+
+        public function set dataProvider(value:ViewStack):void {
+            if (value == null) {
+                return;
+            }
+            _dataProvider = value;
+        }
+
+        public function init():void {
+//				_dataProvider.addEventListener(ChildExistenceChangedEvent.CHILD_ADD,tabinit);
+            _dataProvider.addEventListener(ChangeTabButtonEvent.Change_TabButton, click_TabButton);
+
+            this.addEventListener(CloseTabButtonEvent.Close_TabButton, close);
+            this.addEventListener(ChangeTabButtonEvent.Change_TabButton, click_TabButton);
+            tabinit(null);
+        }
+
+        public function addView(view:CBorderContainer):void {
+            view.addEventListener(CloseEvent.Close_EventStr, closeView);
+            view.percentWidth = 100;
+            view.percentHeight = 100;
+            _dataProvider.addElement(view);
+            _dataProvider.selectedChild = view;
+            tabinit(null);
+        }
+
+        public function setView(mod:String):Boolean {
+            for each(var o:CBorderContainer in dataProvider.getChildren()) {
+                if (o.flag == mod) {
+                    dataProvider.selectedChild = o;
+                    refrash();
+                    o.reloadParamData(null);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public function getView(mod:String):CBorderContainer {
+            for each(var o:CBorderContainer in dataProvider.getChildren()) {
+                if (o.flag == mod) {
+                    return o;
+                }
+            }
+            return null;
+        }
+
+        public function getCurrentView():CBorderContainer{
+            return dataProvider.selectedChild as CBorderContainer;
+        }
+
+        private function close(e:CloseTabButtonEvent):void {
+
+            var view:CBorderContainer = e.getView() as CBorderContainer;
+            var evt:CloseEvent = new CloseEvent(CloseEvent.Close_EventStr, e.getView(), true);
+            view.closeContainer(evt);
+        }
+
+        private function closeView(e:CloseEvent):void {
+            for each(var view:Object in dataProvider.getChildren()){
+                if(view==e.getView()){
+                    dataProvider.removeElement(e.getView());
+                    showList = dataProvider.getChildren();
+                    tabinit(null);
+                    return;
+                }
+            }
+
+//            this.removeElement(e.getBtn());
+
+        }
+
+        private var showList:Array;
+
+        public function tabinit(e:Event):void {
+//				if(showList){
+//					var i:int=showList.length;
+//				}
+            showList = dataProvider.getChildren();
+            this.removeAllElements();
+            var cbtn:CTabButton;
+            for each(var o:CBorderContainer in showList) {
+
+                    cbtn = new CTabButton();
+
+
+                cbtn.label = o.label;
+                cbtn.view = o;
+                cbtn.height = this.height;
+                cbtn.flag = CTabButton.STATUS_D;
+                this.addElement(cbtn);
+            }
+//				if(i<showList.length){
+//					dataProvider.selectedChild=showList[showList.length-1];
+//				}
+            refrash();
+        }
+
+        public function click_TabButton(e:ChangeTabButtonEvent):void {
+            try{
+                dataProvider.getItemIndex(e.getViewBorderContainer());
+            }catch (err:Error){
+                return;
+            }
+            dataProvider.selectedChild = e.getViewBorderContainer();
+            refrash();
+            (dataProvider.selectedChild as CBorderContainer).reloadParamData(null);//todo:通过点击 切换的界面，也要重新reload
+//				e.getBtn().flag=CTabButton.STATUS_U;
+        }
+
+        public function refrash():void {
+            var btn:CTabButton;
+            for (var i:int = 0; i < this.numElements; i++) {
+                btn = this.getElementAt(i) as CTabButton;
+                if (btn != null) {
+                    btn.flag = CTabButton.STATUS_D;
+                    if (dataProvider.selectedChild == btn.view) {
+                        btn.flag = CTabButton.STATUS_U;
+                    }
+                }
+            }
+        }
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+</s:BorderContainer>

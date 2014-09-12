@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						  xmlns:s="library://ns.adobe.com/flex/spark" 
+						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" 
+						  xmlns:uicontrol="uicontrol.*"
+						  width="700" height="500" borderVisible="false" backgroundAlpha="0">
+	
+	<fx:Script>
+		<![CDATA[
+        import control.window.AddPlugin;
+
+        import events.ChangeUserEvent;
+        import events.CloseEvent;
+			import events.PageChangeEvent;
+			
+			import httpcontrol.CHTTPService;
+			import httpcontrol.HttpServiceUtil;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+        import mx.core.FlexGlobals;
+        import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+        import mx.managers.PopUpManager;
+        import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import util.ToolUtil;
+			
+			[Bindable]
+			private var list:ArrayCollection=new ArrayCollection();
+			[Bindable]
+			private var buttonArr1:ArrayCollection=new ArrayCollection();
+			
+			override public   function  init(e:FlexEvent):void{
+                changeCurrentUser(null);
+                pageing.addEventListener(PageChangeEvent.PageChange_EventStr,getApkList);
+			}
+
+            override public function changeCurrentUser(e:ChangeUserEvent):void{
+                buttonArr1.removeAll();
+                if(ToolUtil.sessionUser.auth=="admin"){
+                    pageing.enabled = true;
+                    buttonArr1.addAll(new ArrayCollection([
+                        {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
+                        {'label': '更新应用', 'ico': saveimg, 'mode': 'update'},
+                        {'label': '设置等级', 'ico': wximg, 'mode': 'setrank'},
+                        {'label': '设置房间列表', 'ico': wximg, 'mode': 'setroom'},
+                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'}
+                    ]));
+                }else{
+                    pageing.enabled = false;
+                    buttonArr1.addAll(new ArrayCollection([
+                        {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
+                        {'label': '更新应用', 'ico': saveimg, 'mode': 'update'},
+                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'}
+                    ]));
+                }
+                getApkList();
+            }
+
+			override public function closeContainer(e:CloseEvent):void{
+				dispatchEvent(e);
+				
+			}
+			
+			private function getDataResult(o:Object,e:ResultEvent):void{
+				if(o&&o.success){
+					list = new ArrayCollection(o.result as Array);
+				}
+				
+			}
+			public function getApkList(e:Error=null):void{
+				var data:Object=getData();
+
+				HttpServiceUtil.getCHTTPServiceAndResult("/PluginList",getApkListResult,"POST").send(data);
+			}
+			
+			private function getApkListResult(result:Object,e:ResultEvent):void{
+				if(list.length==0){
+                    pageing.RecordCount = result.result.count;
+                    pageing.mPageSize = 30;
+                    pageing.initPage();
+                }
+                list.removeAll();
+                list.addAll(new ArrayCollection(result.result.list as Array));
+
+			}
+			
+			
+			public function getData():Object{
+				var o:Object={};
+				if(list.length>0){
+                    o['page']=pageing.PageIndex;
+                }
+				return o;
+			}
+			
+			private function delContactAsk():void{
+				
+				Alert.show("确认移除选中的联系人?", "提示", Alert.YES | Alert.NO, null, delContact);
+				
+			}
+			//删除日程
+			private function delContact(e:mx.events.CloseEvent):void
+			{
+				if (e.detail == Alert.YES){
+					var data:Object=new Object();
+					var username:Array = new Array();
+					for each(var item:Object in ToolUtil.contactsList){
+						if(item.selected){
+							username.push(item.username);
+						}
+					}
+					data["usernames"] = username;
+					data["do"] = "out";
+					HttpServiceUtil.getCHTTPServiceAndResult("/ca/joinContacts",ToolUtil.contactsRefresh,"POST").send(data);
+					
+					
+				}
+			}
+			private function addContact():void{
+				var data:Object=new Object();
+				var username:Array = new Array();
+				for each(var item:Object in list){
+					if(item.selected){
+						username.push(item.username);
+					}
+				}
+				if(username.length==0){
+					Alert.show("请选择用户","警告");
+					return;
+				}
+				data["usernames"] = username;
+				data["do"] = "join";
+				HttpServiceUtil.getCHTTPServiceAndResult("/ca/joinContacts",ToolUtil.contactsRefresh,"POST").send(data);
+				
+			}
+			private function search():void{
+				var data:Object=new Object();
+				data["key"] = key.text;
+				HttpServiceUtil.getCHTTPServiceAndResult("/ca/findUser",searchResult,"POST").send(data);
+				
+			}
+			private function searchResult(result:Object,e:ResultEvent):void{
+				if(result.result){
+					list.removeAll();
+					list.addAll(new ArrayCollection(result.result as Array));
+				}
+				
+			}
+			
+			private function loadDataFault(e:FaultEvent):void{
+				Alert.show('操作失败',"提示");
+			}
+			
+			
+			//新增，保存，删除的处理函数
+			private function clickHander(e:ItemClickEvent):void{
+				if(e.item.mode=="add"){
+					add();
+				}
+                if(e.item.mode=="update"){
+                    add();
+                }
+                if(e.item.mode=="del"){
+                    add();
+                }
+                if(e.item.mode=="setrank"){
+                    add();
+                }
+                if(e.item.mode=="setroom"){
+                    add();
+                }
+
+			}
+			
+			public function add():void{
+                PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,AddPlugin,true);
+			}
+			public function del():void{
+				var userArr:ArrayCollection=new ArrayCollection();
+				var obj:Object;
+				var item:Object;
+				for(var i:int=list.length-1;i>=0;i--){
+					item=list.getItemAt(i);
+					if(!item.selected){
+						continue;
+					}
+					obj=new Object();
+					if(item.hasOwnProperty("id")){
+						obj.id=item.id;
+						userArr.addItem(obj);
+					}
+					//					obj.name=item.name;
+					
+				}
+				if(userArr.length>0){
+//					ToolUtil.deptRefresh(refresh);
+//					ToolUtil.areaRefresh(refresh);
+//					ToolUtil.userRefresh(refresh);
+					//					HttpServiceUtil.getCHTTPServiceAndResultAndFault("/htcsgl/_100_BaseInfosAction_deletedept.action",loadDataResult,loadDataFault,"POST").send(userArr);
+				}
+			}
+			
+			public function show(obj:Object):void{
+			}
+			
+			
+			
+			public function refresh(result:Object,e:ResultEvent):void{
+				if(result.success){
+					add();
+					init(null);
+					//					InfoUtil.userRefresh(refreshScx);
+				}
+			}
+			
+			private function isUsered(item:Object, column:GridColumn):String{
+				var str:String="";
+					if(item.isaction){
+						str="启用";
+					}else{
+						str="停止使用";
+					}
+				return str;
+			}
+			
+			
+			private function userType(item:Object, column:GridColumn):String{
+				var str:String="";
+					if(item.ismanager){
+						str="编辑者";
+					}
+					
+				return str;
+			}
+			private function pagechange(e:PageChangeEvent):void
+				
+			{
+				
+				//				datalist.dataProvider = e.Filter(datas)
+				
+			}
+				
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+		<s:RadioButtonGroup id="uTypeRadio" >
+			
+		</s:RadioButtonGroup>
+	</fx:Declarations>
+
+		<s:BorderContainer width="100%" height="100%" id="panel" backgroundAlpha="0"   borderVisible="false">
+			<s:layout>
+				<s:VerticalLayout verticalAlign="top">
+					
+				</s:VerticalLayout>
+			</s:layout>
+			<s:BorderContainer  width="100%" height="45"    borderVisible="false" backgroundImage="{CBorderContainer.toolbgimg}">
+				<s:layout>
+					<s:HorizontalLayout verticalAlign="middle" paddingLeft="25" gap="5">
+						
+					</s:HorizontalLayout>
+				</s:layout>
+                <mx:ButtonBar id="ba1" dataProvider="{buttonArr1}" doubleClickEnabled="true"  chromeColor="#faf0cc"  labelField="label" iconField="ico"  height="30"  itemClick="clickHander(event)" >
+                </mx:ButtonBar>
+                <s:Spacer width="20"></s:Spacer>
+				<s:Label text="查找：" />
+				<s:TextInput width="100" id="key" />
+				<s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="search()" />
+
+
+			</s:BorderContainer>
+            <s:DataGrid width="100%" height="100%" rowHeight="30">
+                <s:columns>
+                    <s:ArrayList>
+                        <s:GridColumn dataField="name" headerText="应用名称" width="120">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="icon" headerText="应用图标" width="40">
+                            <s:itemRenderer>
+                                <fx:Component>
+                                    <s:GridItemRenderer>
+                                        <s:HGroup width="100%" height="100%" verticalAlign="middle" gap="5" paddingLeft="5" paddingTop="3" paddingRight="3">
+                                            <s:Image source="/download?image_id={data.imageid}" height="30" width="30"></s:Image>
+                                        </s:HGroup>
+                                    </s:GridItemRenderer>
+                                </fx:Component>
+                            </s:itemRenderer>
+                        </s:GridColumn>
+                        <s:GridColumn dataField="code" headerText="应用code" width="120">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="appcode" headerText="应用包名">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="date" headerText="创建日期">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="lastUpdateTime" headerText="最后修改日期">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="status" headerText="状态">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="type" headerText="应用类型">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="kindid" headerText="应用分类">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="username" headerText="作者">
+                        </s:GridColumn>
+                    </s:ArrayList>
+                </s:columns>
+            </s:DataGrid>
+            <uicontrol:Pageing id="pageing"></uicontrol:Pageing>
+		</s:BorderContainer>
+</control:CBorderContainer>

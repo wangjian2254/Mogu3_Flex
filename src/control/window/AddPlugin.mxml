@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window:EfficientTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+                             xmlns:s="library://ns.adobe.com/flex/spark"
+                             xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:uicontrol="uicontrol.*"
+                             xmlns:conobj="uicontrol.conobj.*"
+                             width="650" height="550" creationComplete="init()"
+                             title="添加应用" xmlns:window="control.window.*">
+	<fx:Script>
+		<![CDATA[
+        import httpcontrol.HttpServiceUtil;
+
+        import json.JParser;
+
+        import mx.controls.Alert;
+        import mx.core.FlexGlobals;
+        import mx.managers.CursorManager;
+        import mx.managers.PopUpManager;
+        import mx.rpc.events.ResultEvent;
+
+        import util.ToolUtil;
+        private var file:FileReference;
+        private var file_apk:FileReference;
+        private var byteArray:ByteArray;
+        private var bitmapData:BitmapData;
+        private var loader:Loader = new Loader();
+
+        [Bindable]
+        public var plugin:Object = new Object();
+
+
+
+        private function init():void {
+
+            file = new FileReference();
+            file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
+            file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
+            file_apk = new FileReference();
+            file_apk.addEventListener(Event.SELECT, fileReferenceSelectHandler_apk);
+            file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
+        }
+
+
+        private function getOrgByFlagResult(result:Object, e:ResultEvent):void {
+            this.title = result.result.name + " 新成员注册";
+        }
+
+        public function save():void {
+
+            if (orgname.text == "") {
+                Alert.show("组织名称必须填写", "提示");
+                return;
+            }
+
+            var obj:Object = new Object();
+
+            obj.name = orgname.text;
+
+            obj.icon = orgHeadSelectArray.selectedIcon();
+
+
+
+
+//            HttpServiceUtil.getCHTTPServiceAndResult("/riliusers/regOrganization", refresh, "POST").send(obj);
+
+
+        }
+
+        public function refresh(r:Object, e:ResultEvent):void {
+            closeWin();
+            ToolUtil.sessionUserRefresh(ToolUtil.currentUserFun);
+            if (ToolUtil.selectOrg != null && ToolUtil.selectOrg.parent != null) {
+                PopUpManager.removePopUp(ToolUtil.selectOrg);
+                ToolUtil.selectOrg = new SelectOrgPanel();
+            }
+        }
+
+        public function foucePass(obj:Object):void {
+            obj.setFocus();
+        }
+
+        //选择上传的图片
+        private function chooseImage():void {
+            file.removeEventListener(Event.COMPLETE, completeHandle);
+            file.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler);
+            var imageTypes:FileFilter = new FileFilter("Images (*.jpg, *.jpeg, *.png)", "*.jpg;*.jpeg;*.png");
+            var allTypes:Array = new Array(imageTypes);
+            file.browse(allTypes);
+            //                file.browse();
+        }
+
+        //监听文件上传状态
+        private function onProgress(e:ProgressEvent):void {
+//				lbProgress.text=" 已上传 " + e.bytesLoaded + " 字节，共 " + e.bytesTotal + " 字节";
+            var proc:uint = e.bytesLoaded / e.bytesTotal * 100;
+            bar.setProgress(proc, 100);
+            bar.label = "当前进度: " + " " + proc + "%";
+            if (e.bytesLoaded == e.bytesTotal) {
+                CursorManager.removeBusyCursor();
+            }
+        }
+
+        //上传图片到服务器
+        private function proceedWithUpload():void {
+
+            //进度监听
+            file.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            var request:URLRequest = new URLRequest("/image_upload?pluginid=" + plugin.id + "&type=icon");
+            request.method = URLRequestMethod.POST;
+
+            request.contentType = "multipart/form-data";
+
+
+            bar.visible = true;
+
+
+            //设置鼠标忙状态
+            CursorManager.setBusyCursor();
+            try {
+                file.upload(request, 'file', true);
+
+            }
+            catch (error:Error) {
+                Alert.show("上传失败");
+                bar.visible = false;
+            }
+
+
+        }
+
+        //上传完成调用
+        private function completeHandle(event:Event):void {
+            byteArray = null;
+            bar.visible = false;
+            iconImage.source = null;
+        }
+
+        private function uploadImageResult(e:DataEvent):void {
+            try {
+                var result:Object = JParser.decode(e.data);
+                if (result.success == true) {
+
+                }
+            } catch (error:Error) {
+
+                var i:Number = 1;
+            }
+        }
+
+        //载入本地图片
+        private function fileReferenceCompleteHandler(e:Event):void {
+            byteArray = file.data;
+            loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderCompleteHandler);
+            loader.loadBytes(byteArray);
+
+        }
+
+        //图片载入完成显示在预览框中
+        private function loaderCompleteHandler(e:Event):void {
+            var bitmap:Bitmap = Bitmap(loader.content);
+            bitmapData = bitmap.bitmapData;
+            iconImage.source = bitmap;
+        }
+
+        //选择文件动作监听
+        private function fileReferenceSelectHandler(e:Event):void {
+            file.removeEventListener(ProgressEvent.PROGRESS, onProgress);
+            file.load();
+        }
+
+
+
+        //选择文件动作监听
+        private function fileReferenceSelectHandler_apk(e:Event):void {
+            apkImage.visible = true;
+            file_apk.load();
+        }
+
+        private function uploadImageResult_apk(e:DataEvent):void {
+            try {
+                var result:Object = JParser.decode(e.data);
+                if (result.success == true) {
+
+                }
+            } catch (error:Error) {
+
+                var i:Number = 1;
+            }
+        }
+
+        //上传图片到服务器
+        private function proceedWithUpload_apk():void {
+
+            //进度监听
+            file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            var request:URLRequest = new URLRequest("/apk_upload?pluginid=" + plugin.id + "&type=icon");
+            request.method = URLRequestMethod.POST;
+
+            request.contentType = "multipart/form-data";
+
+
+            bar.visible = true;
+
+
+            //设置鼠标忙状态
+            CursorManager.setBusyCursor();
+            try {
+                file_apk.upload(request, 'file', true);
+
+            }
+            catch (error:Error) {
+                Alert.show("上传失败");
+                bar.visible = false;
+            }
+
+
+        }
+
+        //上传完成调用
+        private function completeHandle_apk(event:Event):void {
+            bar.visible = false;
+            apkImage.source = null;
+        }
+
+        //载入本地图片
+        private function fileReferenceCompleteHandler_apk(e:Event):void {
+            apkImage.visible=true;
+
+        }
+
+        //选择上传的图片
+        private function chooseApk():void {
+//            file_apk.removeEventListener(Event.COMPLETE, completeHandle_apk);
+//            file_apk.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler_apk);
+            var imageTypes:FileFilter = new FileFilter("File (*.apk)", "*.apk");
+            var allTypes:Array = new Array(imageTypes);
+            file_apk.browse(allTypes);
+            //                file.browse();
+        }
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+        <conobj:HeadSelectArray id="orgHeadSelectArray"></conobj:HeadSelectArray>
+	</fx:Declarations>
+    <s:HGroup id="hGroup" width="100%" height="100%">
+
+        <s:Form width="350" id="form" >
+
+
+            <s:FormItem id="orgNameItem" label="应用名称:" textAlign="right">
+                <s:TextInput id="orgname"  width="350"  tabIndex="5" enter="save()">
+                </s:TextInput>
+            </s:FormItem>
+            <s:FormItem  label="应用包名:" textAlign="right">
+                <s:TextInput id="appcode"  width="350"  tabIndex="5" enter="save()">
+                </s:TextInput>
+            </s:FormItem>
+            <s:FormItem  label="应用介绍:" textAlign="right">
+                <s:TextArea id="desc" width="350" height="100"></s:TextArea>
+            </s:FormItem>
+            <s:FormItem  label="应用分类:" textAlign="right">
+                <s:DropDownList id="kinDownList" dataProvider="{ToolUtil.userkindlist}" labelField="name" selectedIndex="0" width="350"></s:DropDownList>
+            </s:FormItem>
+            <s:FormItem  label="应用图标:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
+                </s:layout>
+                <s:Image id="iconImage" width="50" height="50"></s:Image>
+                <s:Button label="选择图片" click="chooseImage()"></s:Button>
+            </s:FormItem>
+
+            <s:FormItem  label="apk:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
+                </s:layout>
+                <s:Image id="apkImage" source="/image/apk.png" visible="false" width="50" height="50"></s:Image>
+                <s:Button label="选择文件" click="chooseApk()"></s:Button>
+            </s:FormItem>
+            <s:FormItem>
+                <s:layout>
+                    <s:HorizontalLayout gap="10"/>
+                </s:layout>
+                <s:Button label="提交" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
+                </s:Button>
+                <s:Button label="放弃" click="closeWin()" chromeColor="#ffffff" color="#000000" height="25">
+                </s:Button>
+
+            </s:FormItem>
+        </s:Form>
+        <s:VGroup id="appImageGroup" width="300" height="100%">
+
+        </s:VGroup>
+    </s:HGroup>
+    <uicontrol:CProgressBar id="bar" width="100%" height="100%" visible="false">
+    </uicontrol:CProgressBar>
+</window:EfficientTitleWindow>

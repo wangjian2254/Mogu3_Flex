@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<!--
+  Created by wangjian2254 on 14-7-30.
+-->
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:uicontrol="uicontrol.*"
+                   width="100" height="150" borderVisible="true" borderColor="#000000" cornerRadius="7"
+                   creationComplete="init()" mouseOut="m_Out()" mouseOver="m_Over()" click="selectDepart()" buttonMode="true"
+        >
+    <fx:Script><![CDATA[
+        import control.CBorderContainer;
+
+        import events.ChangeDepartmentEvent;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import mx.collections.ArrayCollection;
+
+        import mx.controls.Alert;
+        import mx.controls.Menu;
+        import mx.events.CloseEvent;
+        import mx.events.MenuEvent;
+
+        import mx.rpc.events.ResultEvent;
+
+        import uicontrol.conobj.DepartmentSelectArray;
+
+
+        import util.RightClickManager;
+
+        import util.ToolUtil;
+
+        private var _department:Object = null;
+
+        private var _fatherDepartment:Object = null;
+
+        [Bindable]
+        public var powerAdd:Boolean = false;
+        [Bindable]
+        public var powerDel:Boolean = false;
+
+        [Bindable]
+        public var departmentSelectArray:DepartmentSelectArray = null;
+
+        private var selected:Boolean = false;
+
+        public function isSelected():Boolean {
+            return selected;
+        }
+
+        private function m_Out():void {
+
+            if (selected) {
+                this.setStyle("backgroundColor", 0xaecfea);
+            } else {
+                this.setStyle("backgroundColor", 0xffffff);
+            }
+        }
+
+        private function m_Over():void {
+
+            this.setStyle("backgroundColor", 0x7ae7bf);
+        }
+
+        public function selectDepart(e:Boolean = false):void {
+
+            if (!this.buttonMode) {
+                return;
+            }
+            if (departmentSelectArray.selectedButtons()) {
+                departmentSelectArray.selectedButtons().unselectDepart();
+            }
+            this.setStyle("backgroundColor", 0xaecfea);
+            selected = true;
+            var event:ChangeDepartmentEvent = new ChangeDepartmentEvent(true);
+            event.depart = department;
+            dispatchEvent(event);
+
+        }
+
+        public function unselectDepart():void {
+            this.setStyle("backgroundColor", 0xffffff);
+            selected = false;
+        }
+
+        private function init():void {
+            if (departmentSelectArray != null) {
+                departmentSelectArray.addArr(this);
+            }
+
+            orgHead.source = department.icon;
+            depatementName.text = department.name;
+            fzrFormItem.removeAllElements();
+
+            var person:Object = null;
+            var personItem:PersonItem = null;
+
+            powerAdd = false;
+            powerDel = false;
+            if (ToolUtil.org.managers.indexOf(ToolUtil.sessionUser.pid) >= 0) {
+
+                powerAdd = true;
+                powerDel = true;
+            } else {
+
+                for (var i:int = 0; i < department.managers.length; i++) {
+                    person = department.managers[i];
+                    if (person.id == ToolUtil.sessionUser.pid) {
+                        powerAdd = true;
+                    }
+                }
+
+                if(fatherDepartment!=null){
+                    for (i = 0; i < fatherDepartment.managers.length; i++) {
+                        person = fatherDepartment.managers[i];
+                        if (person.id == ToolUtil.sessionUser.pid) {
+                            powerDel = true;
+                        }
+                    }
+                }
+
+            }
+            if (department.flag == 'free') {
+                powerAdd = false;
+                powerDel = false;
+            }
+            if (department.flag == 'root') {
+                group.removeElement(btnDel);
+            }
+            for (i = 0; i < department.managers.length; i++) {
+                person = department.managers[i];
+                personItem = new PersonItem();
+                personItem.showBtn = powerAdd;
+                personItem.person = person;
+                personItem.department = department;
+                fzrFormItem.addElement(personItem);
+            }
+            this.width = 60 + formDepart.width;
+            this.height = 10 + formDepart.height;
+
+            this.addEventListener(RightClickManager.RIGHT_CLICK, menuDepartment);
+        }
+
+        private var contextMenuItems:ArrayCollection;
+
+        private function menuDepartment(e:MouseEvent):void {
+
+            if (powerAdd) {
+                contextMenuItems = new ArrayCollection([
+                    {"icon": CBorderContainer.wximg, "text": "发送消息", "mode": "chat"},
+                    {"icon": CBorderContainer.addimg, "text": "添加下级部门", "mode": "add"},
+                    {"icon": CBorderContainer.saveimg, "text": "查看部门信息", "mode": "show"}
+                ]);
+            } else {
+                contextMenuItems = new ArrayCollection([
+                    {"icon": CBorderContainer.wximg, "text": "发送消息", "mode": "chat"}
+                ]);
+            }
+            var menu:Menu = RightClickManager.getMenu(this, contextMenuItems, false);
+
+            menu.labelField = "text";
+            menu.iconField = "icon";
+            menu.variableRowHeight = true;
+            menu.rowHeight = 35;
+            menu.addEventListener(MenuEvent.ITEM_CLICK, menuItemClickHandler);
+
+//              var point:Point = new Point(mouseX,mouseY);
+//              point = localToGlobal(point);
+            menu.show(stage.mouseX, stage.mouseY);
+        }
+
+        private function menuItemClickHandler(e:MenuEvent):void {
+            var item:Object = e.item;
+            var mod:String = item.mode;
+            switch (mod) {
+                case 'chat':
+                    Alert.show(department.name, "发送信息");
+                    break;
+                case 'add':
+                    addChildDepartment();
+                    break;
+                case 'show':
+                    selectDepart();
+                    break;
+
+            }
+
+        }
+
+        public function get department():Object {
+            return _department;
+        }
+
+        public function set department(value:Object):void {
+            _department = value;
+            try {
+                init();
+            } catch (e:Error) {
+
+            }
+
+        }
+
+        private function delDepartment():void {
+            Alert.show("确定要删除部门么?部门下得项目、任务都会被删除，无法恢复。", "删除部门", 3, this, delDepartmentHandler);
+
+        }
+
+        private function delDepartmentHandler(e:CloseEvent):void {
+            if (e.detail == Alert.YES) {//如果按下了确定按钮
+                var obj:Object = new Object();
+                obj['id'] = department.id;
+                HttpServiceUtil.getCHTTPServiceAndResult("/riliusers/delDepartment", addChildDepartmentResult, "POST").send(obj);
+            }
+        }
+
+        private function addChildDepartment():void {
+            var obj:Object = new Object();
+            if (department.hasOwnProperty("children")) {
+                obj['name'] = department.name + '-' + (department.children.length + 1);
+            } else {
+                obj['name'] = department.name + '-1';
+            }
+
+            obj['icon'] = department.icon;
+            obj['father'] = department.id;
+            obj['flag'] = 'custom';
+            HttpServiceUtil.getCHTTPServiceAndResult("/riliusers/updateDepartment", addChildDepartmentResult, "POST").send(obj);
+        }
+
+        private function addChildDepartmentResult(result:Object, e:ResultEvent):void {
+            ToolUtil.departMentListRefresh();
+        }
+
+        public function get fatherDepartment():Object {
+            return _fatherDepartment;
+        }
+
+        public function set fatherDepartment(value:Object):void {
+            _fatherDepartment = value;
+        }
+        ]]></fx:Script>
+            <s:layout>
+                <s:HorizontalLayout gap="5" verticalAlign="top" paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5">
+
+                </s:HorizontalLayout>
+            </s:layout>
+    <s:Image id="orgHead"  width="45" height="45"></s:Image>
+    <s:VGroup id="formDepart" width="100%" gap="5">
+        <s:HGroup gap="15" id="group" horizontalAlign="right" verticalAlign="middle"  width="100%">
+            <uicontrol:BtnAdd toolTip="添加子部门" visible="{powerAdd}" clickFun="{addChildDepartment}" ></uicontrol:BtnAdd>
+            <uicontrol:BtnDel id="btnDel" toolTip="删除部门" visible="{powerDel}" clickFun="{delDepartment}" ></uicontrol:BtnDel>
+        </s:HGroup>
+        <s:HGroup width="100%"  verticalAlign="middle" >
+            <s:Label text="部门名称："></s:Label>
+            <s:Label id="depatementName" minWidth="100" />
+
+        </s:HGroup>
+        <s:HGroup  width="100%"  verticalAlign="top" >
+            <s:Label text="负责人："></s:Label>
+            <s:TileGroup id="fzrFormItem" columnAlign="justifyUsingGap" width="100%" minHeight="30" ></s:TileGroup>
+        </s:HGroup>
+    </s:VGroup>
+
+</s:BorderContainer>

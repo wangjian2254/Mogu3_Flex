@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						  xmlns:s="library://ns.adobe.com/flex/spark" 
+						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700" borderVisible="false" backgroundAlpha="0" xmlns:uicontrol="uicontrol.*">
+	<fx:Script>
+		<![CDATA[
+			import events.AutoGridEvent;
+			import events.ChangeUserEvent;
+			import events.CloseEvent;
+			import events.DelItemEvent;
+			
+			import httpcontrol.HttpServiceUtil;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import uicontrol.DelItem;
+			
+			import util.DataUtil;
+
+	        [Bindable]
+	        private var buttonArr1:ArrayCollection = new ArrayCollection([
+	            {'label': '刷新', 'ico': refreshimg, 'mode': 'refresh'},
+	            {'label': '新增', 'ico': wximg, 'mode': 'add'}
+	        ]);
+			private var state:String="refresh";//refresh(查询状态),add(新增状态),mod(修改状态)del(删除状态)
+	        [Bindable]
+	        private var subjectArr:ArrayCollection = new ArrayCollection([]);
+			[Bindable]
+			private var subKindArr:ArrayCollection=new ArrayCollection([]);
+	        //新增，保存，删除,回复，转发的处理函数
+	        //多个按钮点击事件的处理函数
+	        private function clickHander(e:MouseEvent):void {
+				ba1.requireSelection=true;
+				var item:Object=ba1.selectedItem;
+	            if (item.mode == 'refresh') {
+					state="refresh";
+					loadSubject();
+	            }
+				if (item.mode == 'add') {
+					state="add";
+					resetFormData();
+					delBtn.enabled=false;
+				}
+	
+	        }
+			//查询分类
+			private function loadSubKindData():void{
+				var o:Object={};//如果需要补齐查询参数
+				HttpServiceUtil.getCHTTPServiceAndResult("/kaoshi/getAllKind", loadSubKindDataResult, "POST").send(o);
+			};
+			private function loadSubKindDataResult(result:Object, e:ResultEvent):void {
+				if (result.success) {
+					var arr:Array= result.result is Array ?  result.result : [];
+					subKindArr.removeAll();
+					subKindArr.addAll(new ArrayCollection(arr));
+				}
+			}
+			private var isPaging:Boolean;
+			private function loadSubject():void{
+				var o:Object={};//如果需要补齐查询参数
+				o["kind"]=kindKey.text;
+				var url:String= o["kind"]||o["kind"]==""? "/kaoshi/getSubjectAll":"/kaoshi/getSubjectByKind";
+				isPaging= !o["kind"]||o["kind"]==""?true:false;
+				HttpServiceUtil.getCHTTPServiceAndResult(url, loadSubDataResult, "POST").send(o);
+			}
+			private function loadSubDataResult(result:Object, e:ResultEvent):void {
+				if (result.success) {
+					resetFormData();
+					delBtn.enabled=false;
+					var arr:Array;
+					if(isPaging){
+						pagebar1.mPageSize = result.result.limit;
+						pagebar1.RecordCount = result.result.total;
+						pagebar1.initPage();
+						arr= result.result.result is Array ?  result.result.result : [];
+					}else{
+						arr= result.result.result is Array ?  result.result.result : [];
+					}
+					subjectArr.removeAll();
+					subjectArr.addAll(new ArrayCollection(arr));
+				}
+			}
+			private function savSubject():void{
+				if(!isValid()){
+					return;
+				}
+				var o:Object=getFormData();
+				HttpServiceUtil.getCHTTPServiceAndResult("/kaoshi/updateSubject", savSubjectDataResult, "POST").send(o);
+			}
+			private function savSubjectDataResult(result:Object, e:ResultEvent):void {
+				if (result.success) {
+					loadSubject();
+				}
+			}
+			private function delSubject():void{
+				state="del";
+				Alert.show("是否删除","提示",Alert.YES|Alert.NO,null,function(e:mx.events.CloseEvent):void{
+					if(e.detail==Alert.YES){
+						var o:Object=getFormData();
+						HttpServiceUtil.getCHTTPServiceAndResult("/kaoshi/delSubject", delSubjectDataResult, "POST").send(o);
+					}
+				});
+			}
+			private function delSubjectDataResult(result:Object, e:ResultEvent):void {
+				if (result.success) {
+					loadSubject();
+				}
+			}
+			private function delOption():void{
+				Alert.show("是否删除","提示",Alert.YES|Alert.NO,null,function(e:mx.events.CloseEvent):void{
+					if(e.detail==Alert.YES){
+						var o:Object={};
+						o["id"]=optionGrid.selectedItem["id"];
+						HttpServiceUtil.getCHTTPServiceAndResult("/kaoshi/delOption", delOptionDataResult, "POST").send(o);
+					}
+				});
+			}
+			private function delOptionDataResult(result:Object, e:ResultEvent):void {
+				if (result.success) {
+					var dp:ArrayCollection=optionGrid.dataProvider as ArrayCollection;
+					dp.removeItemAt(optionGrid.selectedIndex);
+				}
+			}
+			private function resetFormData():void{
+				title.text="";
+				subKind.selectedIndex=-1;
+				for(var j:int;j<subKindArr.length;j++){
+						subKindArr[j].selected=false;
+				}
+				changeSubKind();
+				subKind.invalidateList();
+				if(optionGrid.dataProvider==null){
+					optionGrid.dataProvider=new ArrayCollection();
+				}else{
+					optionGrid.dataProvider.removeAll();
+				}
+				bz.text="";
+			}
+			private function getFormData():Object{
+				var o:Object={};
+				var n:Object=subjectGrid.selectedItem;
+				if((state=="mod"||state=="del")&&n){
+					o["id"]=n["id"];
+				}
+				if(state=="add"){
+					o["id"]=null;
+				}
+				if((state=="add"||state=="del"||state=="refresh"||state=="mod")&&!n){
+					o["id"]=null;
+				}
+				o["title"]=title.text;
+				var kinds:Array = [];
+				for(var i:int;i<subKindArr.length;i++){
+					if(subKindArr[i].selected===true){
+						kinds.push(subKindArr[i].id);
+					}
+				}
+				o["kinds"]=kinds;
+				o["bz"]=bz.text;
+				var dp:ArrayCollection=optionGrid.dataProvider as ArrayCollection;
+				var arr:Array=(dp.toArray()).slice(0,dp.length-1);
+				DataUtil.serializationArr("mx_internal","option_",o,arr);
+				return o;
+			}
+			private function setFormData(o:Object):void{
+				title.text=o["title"];
+				bz.text=o["bz"];
+				subKind.selectedIndex=-1;
+				var dp:ArrayCollection=optionGrid.dataProvider as ArrayCollection;
+				dp.removeAll();
+				var optiosArr:Array= o["options"] is Array?o["options"]:[];
+				dp.addAll(new ArrayCollection(o["options"]));
+				var subKinds:Array = o["kinds"] is Array?o["kinds"]:[];
+				var isFind:Boolean=false;
+				for(var j:int;j<subKindArr.length;j++){
+					isFind=false;
+					for(var i:int;i<subKinds.length;i++){
+						if(subKinds[i]==subKindArr[j]["id"]){
+							subKindArr[j].selected=true;
+							isFind=true;
+							break;
+						}
+					}
+					if(!isFind){
+						subKindArr[j].selected=false;
+					}
+				}
+				changeSubKind();
+				subKind.invalidateList();
+			}
+			private function isValid():Boolean{
+				var o:Object=getFormData();
+				if(o["title"]==""){
+					Alert.show("题目不能为空","提示");
+					return false;
+				}
+				var isFind:Boolean=false;
+				for(var j:int=0;j<subKindArr.length;j++){
+					if(subKindArr[j].selected===true){
+						isFind=true;
+						break;
+					}
+				}
+				if(!isFind){
+					Alert.show("分类不能为空","提示");
+					return false;
+				}
+				if(optionGrid.dataProvider.length<=1){
+					Alert.show("选项不能为空","提示");
+					return false;
+				}
+				var arr:Array=optionGrid.dataProvider.toArray();
+				for(var i:int;i<(arr.length-2);i++){
+					if(arr[i]["content"]==""){
+						Alert.show("选项内容不能为空","提示");
+						return false;
+					}
+					if(arr[i]["is_right"]!=true){
+						arr[i]["is_right"]=false;
+					}
+				}
+				if(o["bz"]==""){
+					Alert.show("备注不能为空","提示");
+					return false;
+				}
+				return true;
+			}
+			private function seletSubjec():void{
+				ba1.requireSelection=false;
+				ba1.selectedIndex=-1;
+				var o:Object=subjectGrid.selectedItem;
+				state="mod";
+				setFormData(o);
+				delBtn.enabled=true;
+			}
+			public function changeSubKind():void{
+				subkinds.removeAllElements();
+				var address:DelItem = null;
+				for each(var obj:Object in subKindArr){
+					if(obj.selected){
+						address = new DelItem();
+						address.modifyEnable = true;
+						address.data = obj;
+						address.labelField="name";
+						subkinds.addElement(address);
+						address.addEventListener(DelItemEvent.Delelte,delSubkin);
+					}
+				}
+			}
+			private function delSubkin(e:DelItemEvent):void{
+				subKind.invalidateList();
+			}
+	        override public function init(e:FlexEvent):void {
+				optionGrid.dataProvider=new ArrayCollection();
+				loadSubject();
+				loadSubKindData();
+	        }
+	
+	        override public function changeCurrentUser(e:ChangeUserEvent):void {
+	
+	        }
+	
+	        override public function closeContainer(e:CloseEvent):void {
+	
+	        }
+	
+	        // 重新进入时执行
+	        override public function reloadParamData(e:FlexEvent):void {
+	        }
+	
+	
+			protected function optionGrid_optionHandler(event:AutoGridEvent):void
+			{	
+				var data:Object=event.data;
+				if(event.type==AutoGridEvent.DELETE){
+					if(!data["id"]||data["id"]==""){
+						var dataProvider:ArrayCollection=optionGrid.dataProvider as ArrayCollection;
+						dataProvider.removeItemAt(data.rowIndex);
+					}else{
+						delOption();
+					}
+				}
+			}
+
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:BorderContainer top="5" bottom="5" left="5" right="5"  borderVisible="false" color="0x333333" skinClass="skins.contentBoxSkin">
+		<s:layout>
+			<s:VerticalLayout>
+				
+			</s:VerticalLayout>
+		</s:layout>
+		<s:BorderContainer left="0" top="0" height="45" width="100%" borderVisible="false" backgroundImage="{CBorderContainer.toolbgimg}">
+			<s:layout>
+				<s:HorizontalLayout gap="20" verticalAlign="middle" paddingLeft="20">
+					
+				</s:HorizontalLayout>
+			</s:layout>
+			<s:HGroup height="20">
+				<s:Label text="关键字" height="100%" verticalAlign="middle">
+				</s:Label>
+				<s:TextInput id="kindKey" height="100%">
+				</s:TextInput>
+			</s:HGroup>
+			<s:ButtonBar id="ba1" dataProvider="{buttonArr1}" selectedIndex="0" doubleClickEnabled="true"  chromeColor="#faf0cc"  labelField="label" iconField="ico"  height="30"  requireSelection="true" click="clickHander(event)">
+			</s:ButtonBar>
+		</s:BorderContainer>
+		<s:BorderContainer height="100%" width="100%" borderVisible="false">
+			<s:layout>
+				<s:HorizontalLayout gap="2">
+					
+				</s:HorizontalLayout>
+			</s:layout>
+			<s:VGroup height="100%" width="430" >
+				<mx:DataGrid id="subjectGrid" height="100%" width="100%" dataProvider="{subjectArr}" itemClick="seletSubjec();">
+					<mx:columns>
+						<mx:DataGridColumn headerText="题目" dataField="title">
+							
+						</mx:DataGridColumn>
+						<mx:DataGridColumn headerText="正确率" dataField="accuracy">
+							
+						</mx:DataGridColumn>
+					</mx:columns>
+				</mx:DataGrid>
+				<uicontrol:Pageing id="pagebar1" infolbl="false">
+				</uicontrol:Pageing>
+			</s:VGroup>
+			<s:BorderContainer width="100%" height="100%" borderVisible="true">
+				<s:layout>
+					<s:HorizontalLayout>
+					</s:HorizontalLayout>
+				</s:layout>
+				<s:Form width="100%" height="100%">
+					<mx:HBox width="100%" height="30%">
+						<s:FormItem label="题目" height="100%" width="50%"  id="content1">
+							<s:TextArea id="title"  width="100%" prompt="新增题目" height="{content1.height-20}">
+							</s:TextArea>
+						</s:FormItem>
+						<s:FormItem id="content2" label="分类" width="50%" height="100%">
+							<mx:VBox width="100%" height="{content2.height-20}" verticalGap="0">
+								<s:Scroller width="100%" height="100%" >
+									<s:Group width="100%" height="100%">
+										<s:TileGroup id="subkinds" height="100%"  width="100%" requestedColumnCount="-1">
+											
+										</s:TileGroup>
+									</s:Group>
+								</s:Scroller>
+								<mx:DataGrid id="subKind" width="100%" height="100" dataProvider="{subKindArr}">
+									<mx:columns>
+										<mx:DataGridColumn headerText="选择" dataField="selected" width="40" sortable="false" textAlign="center">
+											<mx:itemRenderer>
+												<fx:Component>
+													<mx:HBox horizontalAlign="center">
+														<fx:Script>
+															<![CDATA[
+																private function changeValue():void{
+																	if(data.selected!=cb.selected){
+																		data.selected = cb.selected;
+																		outerDocument.changeSubKind();
+																	}
+																}
+															]]>
+														</fx:Script>
+														
+														<mx:CheckBox id="cb" selected="{data.selected}" change="changeValue()" >
+															
+														</mx:CheckBox>
+													</mx:HBox>
+												</fx:Component>
+											</mx:itemRenderer>
+										</mx:DataGridColumn>
+										<mx:DataGridColumn headerText="分类" dataField="name" textAlign="left">
+										</mx:DataGridColumn>
+									</mx:columns>
+								</mx:DataGrid>
+							</mx:VBox>
+							<!--<mx:ComboBox id="subKind" width="300" height="100%" dataProvider="{subKindArr}" labelField="name" selectedIndex="-1">
+							</mx:ComboBox>-->
+						</s:FormItem>
+					</mx:HBox>
+					<mx:HBox width="100%" height="30%">
+						<s:FormItem width="50%" id="content3" label="选项" height="100%">
+							<uicontrol:AutoGrid editable="true" width="100%" id="optionGrid" height="{content3.height-20}" autoDelete="optionGrid_optionHandler(event)"  sortableColumns="false">
+								<uicontrol:columns>
+									<mx:DataGridColumn headerText="选项内容" dataField="content" textAlign="left">
+									</mx:DataGridColumn>
+									<mx:DataGridColumn headerText="是否正确" dataField="is_right" width="70" editable="false">
+										<mx:itemRenderer>
+											<fx:Component>
+												<mx:Canvas width="100%">
+													<mx:VBox horizontalAlign="center" width="100%" remove="removeHandler(event)">
+														<fx:Script>
+															<![CDATA[
+																import mx.events.ListEvent;
+																private var _data:Object;
+																import mx.events.FlexEvent;
+																
+																protected function removeHandler(event:FlexEvent):void
+																{
+																	_data=null;
+																}
+																override public function set data(o:Object):void{
+																	_data=o;
+																	is_right.selected=o["is_right"];
+																}
+																private function clickHandler():void{
+																	_data["is_right"]=is_right.selected;
+																	dispatchEvent(new ListEvent(ListEvent.ITEM_CLICK,false,false,-1,-1,null,this));
+																}
+															]]>
+														</fx:Script>
+														<mx:CheckBox id="is_right" click="clickHandler()">
+														</mx:CheckBox>
+													</mx:VBox>
+												</mx:Canvas>
+											</fx:Component>
+										</mx:itemRenderer>
+									</mx:DataGridColumn>
+								</uicontrol:columns>
+							</uicontrol:AutoGrid>
+						</s:FormItem>
+						<s:FormItem label="备注" id="content4" width="50%" height="100%">
+							<s:TextArea id="bz" height="{content4.height-20}" width="100%" prompt="备注">
+							</s:TextArea>
+						</s:FormItem>
+					</mx:HBox>
+					<mx:ControlBar>
+						<s:Button id="savBtn" label="保存" color="white" chromeColor="red" height="25" click="savSubject();">
+						</s:Button>
+						<s:Button id="delBtn" label="删除" height="25"  enabled="false" click="delSubject();">
+						</s:Button>
+					</mx:ControlBar>
+				</s:Form>
+			</s:BorderContainer>
+			
+		</s:BorderContainer>
+	</s:BorderContainer>
+</control:CBorderContainer>
