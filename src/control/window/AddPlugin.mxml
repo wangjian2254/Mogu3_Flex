@@ -3,7 +3,7 @@
                              xmlns:s="library://ns.adobe.com/flex/spark"
                              xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:uicontrol="uicontrol.*"
                              xmlns:conobj="uicontrol.conobj.*"
-                             width="650" height="550" creationComplete="init()"
+                             width="750" height="550" creationComplete="init()"
                              title="添加应用" xmlns:window="control.window.*">
 	<fx:Script>
 		<![CDATA[
@@ -236,6 +236,16 @@
             file_apk.browse(allTypes);
             //                file.browse();
         }
+
+        //选择上传的图片
+        private function chooseApkImage():void {
+//            file_apk.removeEventListener(Event.COMPLETE, completeHandle_apk);
+//            file_apk.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler_apk);
+            var imageTypes:FileFilter = new FileFilter("File (*.apk)", "*.apk");
+            var allTypes:Array = new Array(imageTypes);
+            file_apk.browse(allTypes);
+            //                file.browse();
+        }
         ]]>
 	</fx:Script>
 	<fx:Declarations>
@@ -244,7 +254,7 @@
 	</fx:Declarations>
     <s:HGroup id="hGroup" width="100%" height="100%">
 
-        <s:Form width="350" id="form" >
+        <s:Form width="450" id="form" >
 
 
             <s:FormItem id="orgNameItem" label="应用名称:" textAlign="right">
@@ -287,8 +297,14 @@
 
             </s:FormItem>
         </s:Form>
-        <s:VGroup id="appImageGroup" width="300" height="100%">
+        <s:VGroup id="appImageGroup" width="300" height="100%" horizontalAlign="left">
+           <s:Button label="选择应用图片" click="chooseApkImage()"/>
+            <s:Image height="100"></s:Image>
+            <s:Scroller width="100%" height="100%">
+                <s:VGroup id="imgGroup" toolTip="双击删除图片">
 
+                </s:VGroup>
+            </s:Scroller>
         </s:VGroup>
     </s:HGroup>
     <uicontrol:CProgressBar id="bar" width="100%" height="100%" visible="false">

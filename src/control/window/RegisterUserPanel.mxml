@@ -114,7 +114,7 @@
 
 
 
-				if(this.password.text==""||this.password.text!=this.rpassword.text){
+				if(this.password.text!=this.rpassword.text){
 					Alert.show("密码和确认密码要一致。","提示");
 					return;
 				}
