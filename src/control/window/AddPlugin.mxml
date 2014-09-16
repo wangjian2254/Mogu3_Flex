@@ -7,6 +7,8 @@
                              title="添加应用" xmlns:window="control.window.*">
 	<fx:Script>
 		<![CDATA[
+        import events.PluginEvent;
+
         import httpcontrol.HttpServiceUtil;
 
         import json.JParser;
@@ -19,10 +21,12 @@
 
         import util.ToolUtil;
         private var file:FileReference;
+        private var file_image:FileReference;
         private var file_apk:FileReference;
         private var byteArray:ByteArray;
         private var bitmapData:BitmapData;
         private var loader:Loader = new Loader();
+        private var loader_image:Loader = new Loader();
 
         [Bindable]
         public var plugin:Object = new Object();
@@ -34,9 +38,28 @@
             file = new FileReference();
             file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
             file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
+
+            file_image = new FileReference();
+            file_image.addEventListener(Event.SELECT, fileReferenceSelectHandler_image);
+            file_image.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_image);
+
             file_apk = new FileReference();
             file_apk.addEventListener(Event.SELECT, fileReferenceSelectHandler_apk);
             file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
+
+            if(plugin.hasOwnProperty("id")){
+                appname.text = plugin.name;
+                appcode.text = plugin.appcode;
+                code.text = plugin.code;
+                desc.text = plugin.desc;
+                typeButtonGroup.selectedValue = plugin.type;
+                for each(var obj:Object in ToolUtil.userkindlist){
+                    if(obj.id == plugin.kindids[0]){
+                       kinDownList.selectedItem = obj;
+                    }
+                }
+                iconImage.source = "/download?image_id="+plugin.imageid;
+            }
         }
 
 
@@ -46,22 +69,40 @@
 
         public function save():void {
 
-            if (orgname.text == "") {
-                Alert.show("组织名称必须填写", "提示");
+            if (appname.text == ""||appcode.text == ""||desc.text == "") {
+                Alert.show("应用名称、应用包名、应用简介必须填写", "提示");
                 return;
+            }
+            if(!plugin.hasOwnProperty("id")){
+                if(iconImage.source==null){
+                    Alert.show("请选择应用图标", "提示");
+                    return;
+                }
+                if(!apkImage.visible){
+                    Alert.show("请选择需要上传的apk", "提示");
+                    return;
+                }
             }
 
             var obj:Object = new Object();
 
-            obj.name = orgname.text;
+            if(plugin.hasOwnProperty("id")){
+                obj.pluginid = plugin.id;
+            }
+            obj.name = appname.text;
+            obj.appcode = appcode.text;
+            obj.desc = desc.text;
+            obj.kind = kinDownList.selectedItem.id;
+            obj.type = typeButtonGroup.selectedValue;
+            obj.code = code.text;
 
-            obj.icon = orgHeadSelectArray.selectedIcon();
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginUpdate", function(result:Object,e:ResultEvent):void{
+                plugin.id = result.result.pluginid;
+                dispatchEvent(new PluginEvent());
+                var upload_url:String = result.result.upload_url;
+                var upload_icon_url:String = result.result.upload_icon_url;
 
-
-
-
-//            HttpServiceUtil.getCHTTPServiceAndResult("/riliusers/regOrganization", refresh, "POST").send(obj);
-
+            },"POST").send(obj);
 
         }
 
@@ -134,6 +175,12 @@
             iconImage.source = null;
         }
 
+        //上传完成调用
+        private function completeHandle_image(event:Event):void {
+            byteArray = null;
+            bar.visible = false;
+            appImage.source = null;
+        }
         private function uploadImageResult(e:DataEvent):void {
             try {
                 var result:Object = JParser.decode(e.data);
@@ -161,6 +208,21 @@
             iconImage.source = bitmap;
         }
 
+        //载入本地图片
+        private function fileReferenceCompleteHandler_image(e:Event):void {
+            byteArray = file_image.data;
+            loader_image.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderCompleteHandler_image);
+            loader_image.loadBytes(byteArray);
+
+        }
+
+        //图片载入完成显示在预览框中
+        private function loaderCompleteHandler_image(e:Event):void {
+            var bitmap:Bitmap = Bitmap(loader.content);
+            bitmapData = bitmap.bitmapData;
+            iconImage.source = bitmap;
+        }
+
         //选择文件动作监听
         private function fileReferenceSelectHandler(e:Event):void {
             file.removeEventListener(ProgressEvent.PROGRESS, onProgress);
@@ -168,6 +230,24 @@
         }
 
 
+        //选择文件动作监听
+        private function fileReferenceSelectHandler_image(e:Event):void {
+            file_image.removeEventListener(ProgressEvent.PROGRESS, onProgress);
+            file_image.load();
+        }
+
+
+        private function uploadImageResult_image(e:DataEvent):void {
+            try {
+                var result:Object = JParser.decode(e.data);
+                if (result.success == true) {
+
+                }
+            } catch (error:Error) {
+
+                var i:Number = 1;
+            }
+        }
 
         //选择文件动作监听
         private function fileReferenceSelectHandler_apk(e:Event):void {
@@ -239,30 +319,66 @@
 
         //选择上传的图片
         private function chooseApkImage():void {
-//            file_apk.removeEventListener(Event.COMPLETE, completeHandle_apk);
-//            file_apk.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler_apk);
-            var imageTypes:FileFilter = new FileFilter("File (*.apk)", "*.apk");
+            if(!plugin.hasOwnProperty("id")){
+                Alert.show("请先保存应用信息，再上传应用的图片。")
+                return;
+            }
+            file_image.removeEventListener(Event.COMPLETE, completeHandle_image);
+            file_image.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler_image);
+            var imageTypes:FileFilter = new FileFilter("Images (*.jpg, *.jpeg, *.png)", "*.jpg;*.jpeg;*.png");
             var allTypes:Array = new Array(imageTypes);
-            file_apk.browse(allTypes);
-            //                file.browse();
+            file_image.browse(allTypes);
+        }
+
+        //上传图片到服务器
+        private function proceedWithUpload_image():void {
+            //进度监听
+            file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            var request:URLRequest = new URLRequest("/apk_upload?pluginid=" + plugin.id + "&type=icon");
+            request.method = URLRequestMethod.POST;
+            request.contentType = "multipart/form-data";
+            bar.visible = true;
+            //设置鼠标忙状态
+            CursorManager.setBusyCursor();
+            try {
+                file_apk.upload(request, 'file', true);
+            }
+            catch (error:Error) {
+                Alert.show("上传失败");
+                bar.visible = false;
+            }
         }
         ]]>
 	</fx:Script>
 	<fx:Declarations>
 		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
-        <conobj:HeadSelectArray id="orgHeadSelectArray"></conobj:HeadSelectArray>
+        <s:RadioButtonGroup id="typeButtonGroup"></s:RadioButtonGroup>
 	</fx:Declarations>
     <s:HGroup id="hGroup" width="100%" height="100%">
 
         <s:Form width="450" id="form" >
-
+            <s:layout>
+                <s:FormLayout gap="0"></s:FormLayout>
+            </s:layout>
 
             <s:FormItem id="orgNameItem" label="应用名称:" textAlign="right">
-                <s:TextInput id="orgname"  width="350"  tabIndex="5" enter="save()">
+                <s:TextInput id="appname"  width="350"  tabIndex="5" >
+                </s:TextInput>
+            </s:FormItem>
+            <s:FormItem  label="应用类型:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                </s:layout>
+                <s:RadioButton value="0" group="{typeButtonGroup}" selected="true" label="单机"></s:RadioButton>
+                <s:RadioButton value="1" group="{typeButtonGroup}" label="积分"></s:RadioButton>
+                <s:RadioButton value="2" group="{typeButtonGroup}" label="多人"></s:RadioButton>
+            </s:FormItem>
+            <s:FormItem  label="应用code:" textAlign="right">
+                <s:TextInput id="code"  width="350"  tabIndex="5" >
                 </s:TextInput>
             </s:FormItem>
             <s:FormItem  label="应用包名:" textAlign="right">
-                <s:TextInput id="appcode"  width="350"  tabIndex="5" enter="save()">
+                <s:TextInput id="appcode"  width="350"  tabIndex="5" >
                 </s:TextInput>
             </s:FormItem>
             <s:FormItem  label="应用介绍:" textAlign="right">
@@ -299,7 +415,7 @@
         </s:Form>
         <s:VGroup id="appImageGroup" width="300" height="100%" horizontalAlign="left">
            <s:Button label="选择应用图片" click="chooseApkImage()"/>
-            <s:Image height="100"></s:Image>
+            <s:Image id="appImage" height="100"></s:Image>
             <s:Scroller width="100%" height="100%">
                 <s:VGroup id="imgGroup" toolTip="双击删除图片">
 

@@ -1,4 +1,5 @@
 import control.ApkControl;
+import control.KindControl;
 
 import events.ChangeMenuEvent;
 
@@ -180,9 +181,9 @@ protected function onMenuChange(event:MenuEvent, obj:Object = null):void {
 			case 'apkadd':
 				c = new ApkControl();
 				break;
-//			case 'contact':
-//				c = new ContactControl();
-//				break;
+			case 'kind':
+				c = new KindControl();
+				break;
 //			case 'group':
 //				c = new DepartmentControl();
 //				break;

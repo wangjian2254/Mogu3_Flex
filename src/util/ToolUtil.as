@@ -55,6 +55,9 @@ public class ToolUtil
     public static var taskurgentlist:ArrayCollection=new ArrayCollection([{id:1,label:"普通"},{id:2,label:"优先"},{id:3,label:"紧急"}]);
 
 
+    public static var kindTypeList:ArrayCollection=new ArrayCollection([{id:'0',label:"管理员专用"},{id:'1',label:"第三方可用"}]);
+
+
 
 
     private static var time:Timer = new Timer(1000*60*5,0);
@@ -67,6 +70,7 @@ public class ToolUtil
 
 
         sessionUserRefresh();
+        kindListRefresh();
 //        currentOrgRefresh();
 //        departMentListRefresh();
 //        contactsRefresh();
@@ -155,9 +159,9 @@ public class ToolUtil
     public static function kindListRefresh(fun:Function=null):void{
 
         if(fun==null){
-            HttpServiceUtil.getCHTTPServiceAndResult("/getKindlist", resultGetKindlist,"POST").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/KindList", resultGetKindlist,"POST").send();
         }else{
-            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/getKindlist", resultGetKindlist,"POST");
+            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/KindList", resultGetKindlist,"POST");
             http.resultFunArr.addItem(fun);
             http.send();
 
