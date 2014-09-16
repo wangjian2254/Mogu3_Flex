@@ -197,7 +197,7 @@
             try {
                 var result:Object = JParser.decode(e.data);
                 if (result.success == true) {
-
+                    Alert.show(result.message, "提示");
                 }
             } catch (error:Error) {
 
@@ -234,6 +234,13 @@
             var bitmap:Bitmap = Bitmap(loader.content);
             bitmapData = bitmap.bitmapData;
             iconImage.source = bitmap;
+
+            var obj:Object = new Object();
+            obj["pluginid"] = plugin.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginImageUpdate", function(result:Object,e:ResultEvent):void{
+                proceedWithUpload_image(result.result);
+            },"GET").send(obj);
+
         }
 
         //选择文件动作监听
@@ -254,7 +261,8 @@
             try {
                 var result:Object = JParser.decode(e.data);
                 if (result.success == true) {
-
+                    Alert.show(result.message, "提示");
+                    appImage.source=null;
                 }
             } catch (error:Error) {
 
@@ -273,7 +281,7 @@
             try {
                 var result:Object = JParser.decode(e.data);
                 if (result.success == true) {
-
+                         Alert.show(result.message,"提示");
                 }
             } catch (error:Error) {
 
@@ -343,16 +351,16 @@
         }
 
         //上传图片到服务器
-        private function proceedWithUpload_image():void {
+        private function proceedWithUpload_image(url:String):void {
             //进度监听
-            file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest("/apk_upload?pluginid=" + plugin.id + "&type=icon");
+            file_image.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            var request:URLRequest = new URLRequest(url);
             request.method = URLRequestMethod.POST;
             request.contentType = "multipart/form-data";
             bar.visible = true;
             //设置鼠标忙状态
             try {
-                file_apk.upload(request, 'file', false);
+                file_image.upload(request, 'file', false);
             }
             catch (error:Error) {
                 Alert.show("上传失败");
