@@ -101,6 +101,19 @@
                 dispatchEvent(new PluginEvent());
                 var upload_url:String = result.result.upload_url;
                 var upload_icon_url:String = result.result.upload_icon_url;
+                if(file.data){
+                    file_image.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, function(e:Event):void{
+                        if(file_apk.data){
+                            proceedWithUpload(upload_url);
+                        }
+                    })
+                    proceedWithUpload(upload_icon_url);
+                }else{
+                    if(file_apk.data){
+                        proceedWithUpload_apk(upload_url);
+                    }
+                }
+
 
             },"POST").send(obj);
 
@@ -141,11 +154,11 @@
         }
 
         //上传图片到服务器
-        private function proceedWithUpload():void {
+        private function proceedWithUpload(url:String):void {
 
             //进度监听
             file.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest("/image_upload?pluginid=" + plugin.id + "&type=icon");
+            var request:URLRequest = new URLRequest(url);
             request.method = URLRequestMethod.POST;
 
             request.contentType = "multipart/form-data";
@@ -155,9 +168,8 @@
 
 
             //设置鼠标忙状态
-            CursorManager.setBusyCursor();
             try {
-                file.upload(request, 'file', true);
+                file.upload(request, 'file', false);
 
             }
             catch (error:Error) {
@@ -191,6 +203,7 @@
 
                 var i:Number = 1;
             }
+            bar.visible = false;
         }
 
         //载入本地图片
@@ -247,6 +260,7 @@
 
                 var i:Number = 1;
             }
+            bar.visible = false;
         }
 
         //选择文件动作监听
@@ -265,26 +279,24 @@
 
                 var i:Number = 1;
             }
+            bar.visible = false;
         }
 
         //上传图片到服务器
-        private function proceedWithUpload_apk():void {
+        private function proceedWithUpload_apk(url:String):void {
 
             //进度监听
             file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest("/apk_upload?pluginid=" + plugin.id + "&type=icon");
+            var request:URLRequest = new URLRequest(url);
             request.method = URLRequestMethod.POST;
 
             request.contentType = "multipart/form-data";
 
-
             bar.visible = true;
 
 
-            //设置鼠标忙状态
-            CursorManager.setBusyCursor();
             try {
-                file_apk.upload(request, 'file', true);
+                file_apk.upload(request, 'file', false);
 
             }
             catch (error:Error) {
@@ -339,9 +351,8 @@
             request.contentType = "multipart/form-data";
             bar.visible = true;
             //设置鼠标忙状态
-            CursorManager.setBusyCursor();
             try {
-                file_apk.upload(request, 'file', true);
+                file_apk.upload(request, 'file', false);
             }
             catch (error:Error) {
                 Alert.show("上传失败");

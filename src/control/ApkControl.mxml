@@ -74,7 +74,7 @@
 			public function getApkList(e:Error=null):void{
 				var data:Object=getData();
 
-				HttpServiceUtil.getCHTTPServiceAndResult("/PluginList",getApkListResult,"POST").send(data);
+				HttpServiceUtil.getCHTTPServiceAndResult("/PluginList",getApkListResult,"get").send(data);
 			}
 			
 			private function getApkListResult(result:Object,e:ResultEvent):void{
