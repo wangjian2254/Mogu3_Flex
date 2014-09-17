@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window:EfficientTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+                             xmlns:s="library://ns.adobe.com/flex/spark"
+                             xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:uicontrol="uicontrol.*"
+                             xmlns:conobj="uicontrol.conobj.*"
+                             width="750" height="550" creationComplete="init()"
+                             title="添加应用" xmlns:window="control.window.*">
+	<fx:Script>
+		<![CDATA[
+        import events.PluginEvent;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import json.JParser;
+
+        import mx.controls.Alert;
+        import mx.core.FlexGlobals;
+        import mx.events.CloseEvent;
+        import mx.managers.CursorManager;
+        import mx.managers.PopUpManager;
+        import mx.rpc.events.ResultEvent;
+
+        import util.DateUtil;
+
+        import util.ToolUtil;
+        private var file:FileReference;
+        private var byteArray:ByteArray;
+        private var bitmapData:BitmapData;
+        private var loader:Loader = new Loader();
+
+        [Bindable]
+        public var notice:Object = new Object();
+
+
+
+        private function init():void {
+
+            file = new FileReference();
+            file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
+            file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
+
+            if(notice.hasOwnProperty("id")){
+                appname.text = notice.title;
+                typeButtonGroup.selectedValue = notice.type;
+                startdate.selectedDate = DateUtil.parseLblDate(notice.startdate);
+                enddate.selectedDate = DateUtil.parseLblDate(notice.end);
+
+                for each(var p:Object in ToolUtil.pluginList){
+                    if(notice.pluginid == p.id){
+                        appDownList.selectedItem = p;
+                        break;
+                    }
+                }
+                imgGroup.removeAllElements();
+                for each(var item:Object in notice.noticeconten){
+                    if(item.type == "img"){
+                        var img:Image = new Image();
+                        img.source = "/download/"+item.imgid;
+                        img.doubleClickEnabled = true;
+                        img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
+                        imgGroup.addElement(img);
+                    }
+                    if(item.type == "text"){
+                        var lbl:Label = new Label();
+                        lbl.text = item.content;
+                        lbl.width = 380;
+                        lbl.maxDisplayedLines = -1;
+                        lbl.buttonMode = true;
+                        lbl.doubleClickEnabled = true;
+                        lbl.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
+                        imgGroup.addElement(lbl);
+                    }
+
+                }
+            }
+        }
+
+
+        private function getOrgByFlagResult(result:Object, e:ResultEvent):void {
+            this.title = result.result.name + " 新成员注册";
+        }
+
+        public function save():void {
+
+            if (appname.text == ""||!startdate.selectedDate||!enddate.selectedDate) {
+                Alert.show("标题、起止日期必须填写", "提示");
+                return;
+            }
+            var obj:Object = new Object();
+            if(notice.hasOwnProperty("id")){
+                obj.pluginid = notice.id;
+            }
+            obj.title = appname.text;
+            obj.type = typeButtonGroup.selectedValue;
+            obj.startdate = DateUtil.dateLbl(startdate.selectedDate);
+            obj.enddate = DateUtil.dateLbl(enddate.selectedDate);
+            if(typeButtonGroup.selectedValue == 2){
+                obj.plugin = appDownList.selectedItem.id;
+            }
+            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeUpdate", function(result:Object,e:ResultEvent):void{
+                notice = result.result;
+                dispatchEvent(new PluginEvent());
+                init();
+            },"POST").send(obj);
+
+        }
+
+        private function appendNotice():void{
+            if(desc.text){
+                var obj:Object = new Object();
+                obj.id = notice.id;
+                obj.content = desc.text;
+                HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendContent", function(result:Object,e:ResultEvent):void{
+                    desc.text = "";
+                    notice = result.result;
+                    if(file.data){
+                        var obj:Object = new Object();
+                        obj.id = notice.id;
+                        HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function(result:Object,e:ResultEvent):void{
+                            if(file.data){
+                                proceedWithUpload(result.result);
+                            }
+                        },"get").send(obj);
+                    }else{
+                        init();
+                    }
+
+                },"POST").send(obj);
+            }else{
+                if(file.data){
+                    var obj:Object = new Object();
+                    obj.id = notice.id;
+                    HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function(result:Object,e:ResultEvent):void{
+                        if(file.data){
+                            proceedWithUpload(result.result);
+                        }
+                    },"get").send(obj);
+                }
+            }
+
+        }
+
+        public function refresh(r:Object, e:ResultEvent):void {
+            closeWin();
+            ToolUtil.sessionUserRefresh(ToolUtil.currentUserFun);
+            if (ToolUtil.selectOrg != null && ToolUtil.selectOrg.parent != null) {
+                PopUpManager.removePopUp(ToolUtil.selectOrg);
+                ToolUtil.selectOrg = new SelectOrgPanel();
+            }
+        }
+
+        public function foucePass(obj:Object):void {
+            obj.setFocus();
+        }
+
+        //选择上传的图片
+        private function chooseImage():void {
+            file.removeEventListener(Event.COMPLETE, completeHandle);
+            file.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler);
+            var imageTypes:FileFilter = new FileFilter("Images (*.jpg, *.jpeg, *.png)", "*.jpg;*.jpeg;*.png");
+            var allTypes:Array = new Array(imageTypes);
+            file.browse(allTypes);
+            //                file.browse();
+        }
+
+        //监听文件上传状态
+        private function onProgress(e:ProgressEvent):void {
+//				lbProgress.text=" 已上传 " + e.bytesLoaded + " 字节，共 " + e.bytesTotal + " 字节";
+            var proc:uint = e.bytesLoaded / e.bytesTotal * 100;
+            bar.setProgress(proc, 100);
+            bar.label = "当前进度: " + " " + proc + "%";
+            if (e.bytesLoaded == e.bytesTotal) {
+                CursorManager.removeBusyCursor();
+            }
+        }
+
+        //上传图片到服务器
+        private function proceedWithUpload(url:String):void {
+
+            //进度监听
+            file.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            var request:URLRequest = new URLRequest(url);
+            request.method = URLRequestMethod.POST;
+
+            request.contentType = "multipart/form-data";
+
+
+            bar.visible = true;
+
+
+            //设置鼠标忙状态
+            try {
+                file.upload(request, 'file', false);
+
+            }
+            catch (error:Error) {
+                Alert.show("上传失败");
+                bar.visible = false;
+            }
+
+
+        }
+
+        //上传完成调用
+        private function completeHandle(event:Event):void {
+            byteArray = null;
+            bar.visible = false;
+            iconImage.source = null;
+
+        }
+
+
+        private function uploadImageResult(e:DataEvent):void {
+            try {
+                var result:Object = JParser.decode(e.data);
+                if (result.success == true) {
+                    Alert.show(result.message, "提示");
+                    notice = result.result;
+                    init();
+                    file = new FileReference();
+                    file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
+                    file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
+                }
+            } catch (error:Error) {
+
+                var i:Number = 1;
+            }
+            bar.visible = false;
+            iconImage.source = null;
+        }
+
+        //载入本地图片
+        private function fileReferenceCompleteHandler(e:Event):void {
+            file.removeEventListener(Event.COMPLETE, fileReferenceCompleteHandler);
+            byteArray = file.data;
+            loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderCompleteHandler);
+            loader.loadBytes(byteArray);
+
+        }
+
+        //图片载入完成显示在预览框中
+        private function loaderCompleteHandler(e:Event):void {
+            var bitmap:Bitmap = Bitmap(loader.content);
+            bitmapData = bitmap.bitmapData;
+            iconImage.source = bitmap;
+        }
+
+
+        //选择文件动作监听
+        private function fileReferenceSelectHandler(e:Event):void {
+            file.removeEventListener(ProgressEvent.PROGRESS, onProgress);
+            file.load();
+        }
+
+
+
+        private var contentIndex:int;
+        private function deleteImage(event:MouseEvent):void {
+            for (var i:Number = 0; i < imgGroup.numElements; i++) {
+                if(event.currentTarget == imgGroup.getElementAt(i)){
+                    contentIndex = i;
+                    break;
+                }
+            }
+            if (event.currentTarget is Image) {
+
+                Alert.show("确认删除双击的图片?", "提示", Alert.YES | Alert.NO, null, deleteImg);
+            }
+            if (event.currentTarget is Label) {
+
+                Alert.show("确认删除: "+event.currentTarget.text, "提示", Alert.YES | Alert.NO, null, deleteImg);
+            }
+        }
+
+        //上传图片到服务器
+        private function deleteImg(e:mx.events.CloseEvent):void {
+            if (e.detail == Alert.YES) {
+                var data:Object = new Object();
+                data["contentIndex"] = contentIndex;
+                data["id"] = notice.id;
+                HttpServiceUtil.getCHTTPServiceAndResult("/DeleteContentNotice", delImageResult, "POST").send(data);
+            }
+        }
+
+        private function delImageResult(result:Object, e:ResultEvent):void {
+            if (result.success) {
+                imgGroup.removeElement(imgGroup.getElementAt(contentIndex));
+                notice.noticeconten.splice(contentIndex,1);
+            }
+        }
+
+        private function selectedApp():void{
+            appImage.source = "/download/"+appDownList.selectedItem.icon;
+        }
+
+
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+        <s:RadioButtonGroup id="typeButtonGroup"></s:RadioButtonGroup>
+	</fx:Declarations>
+    <s:HGroup id="hGroup" width="100%" height="100%">
+
+        <s:Form width="340" id="form" >
+            <s:layout>
+                <s:FormLayout gap="0"></s:FormLayout>
+            </s:layout>
+
+            <s:FormItem id="orgNameItem" label="标题:" textAlign="right">
+                <s:TextInput id="appname"  width="240"  tabIndex="5" >
+                </s:TextInput>
+            </s:FormItem>
+            <s:FormItem  label="类型:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                </s:layout>
+                <s:RadioButton value="1" group="{typeButtonGroup}" selected="true" label="系统消息"></s:RadioButton>
+                <s:RadioButton id="appRadioButton" value="2" group="{typeButtonGroup}" label="应用广告"></s:RadioButton>
+            </s:FormItem>
+            <s:FormItem  label="应用:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                </s:layout>
+                <s:DropDownList id="appDownList" dataProvider="{ToolUtil.pluginList}" selectedIndex="0" enabled="{appRadioButton.selected}" labelField="name" change="selectedApp()"></s:DropDownList>
+                <s:Image id="appImage" visible="{appRadioButton.selected}" height="40"></s:Image>
+            </s:FormItem>
+            <s:FormItem  label="起止时间:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                </s:layout>
+                <mx:DateField id="startdate" formatString="YYYY/MM/DD" dayNames="{DateUtil.dayNames}" monthNames="{DateUtil.monthNames}"  />
+                <s:Label text="~"/>
+                <mx:DateField id="enddate"  formatString="YYYY/MM/DD" dayNames="{DateUtil.dayNames}" monthNames="{DateUtil.monthNames}" />
+            </s:FormItem>
+            <s:FormItem>
+                <s:layout>
+                    <s:HorizontalLayout gap="10"/>
+                </s:layout>
+                <s:Button label="提交" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
+                </s:Button>
+                <s:Button label="放弃" click="closeWin()" chromeColor="#ffffff" color="#000000" height="25">
+                </s:Button>
+
+            </s:FormItem>
+            <s:FormHeading label="消息内容"></s:FormHeading>
+            <s:FormItem  label="文字:" textAlign="right">
+                <s:TextArea id="desc" width="240" height="100"></s:TextArea>
+            </s:FormItem>
+
+            <s:FormItem  label="图片:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
+                </s:layout>
+                <s:Image id="iconImage" width="50" height="50"></s:Image>
+                <s:Button label="选择图片" click="chooseImage()"></s:Button>
+            </s:FormItem>
+            <s:FormItem>
+                <s:layout>
+                    <s:HorizontalLayout gap="10"/>
+                </s:layout>
+                <s:Button label="追加" click="appendNotice()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
+                </s:Button>
+            </s:FormItem>
+        </s:Form>
+        <s:VGroup id="appImageGroup" width="410" height="100%" horizontalAlign="left" paddingTop="5">
+            <s:Label text="正文："></s:Label>
+            <s:Scroller width="400" height="480" >
+                <s:VGroup id="imgGroup" toolTip="双击删除" gap="5" paddingLeft="3" >
+
+                </s:VGroup>
+            </s:Scroller>
+        </s:VGroup>
+    </s:HGroup>
+    <uicontrol:CProgressBar id="bar" width="100%" height="100%" visible="false">
+    </uicontrol:CProgressBar>
+</window:EfficientTitleWindow>

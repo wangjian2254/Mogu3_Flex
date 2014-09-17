@@ -1,5 +1,7 @@
 import control.ApkControl;
 import control.KindControl;
+import control.NoticeControl;
+import control.WebUrlControl;
 
 import events.ChangeMenuEvent;
 
@@ -184,6 +186,12 @@ protected function onMenuChange(event:MenuEvent, obj:Object = null):void {
 			case 'kind':
 				c = new KindControl();
 				break;
+			case 'uri':
+				c = new WebUrlControl();
+				break;
+            case 'notice':
+                c = new NoticeControl();
+                break;
 //			case 'group':
 //				c = new DepartmentControl();
 //				break;

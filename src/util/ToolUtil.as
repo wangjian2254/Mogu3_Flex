@@ -372,25 +372,25 @@ public class ToolUtil
     }
 
     [Bindable]
-    public static var contactsList:ArrayCollection=new ArrayCollection();
+    public static var pluginList:ArrayCollection=new ArrayCollection();
 
-    public static function contactsRefresh(fun:*=null,e:*=null):void{
+    public static function pluginRefresh(fun:*=null,e:*=null):void{
 
         if(!(fun is Function)){
-            HttpServiceUtil.getCHTTPServiceAndResult("/riliusers/getContacts",resultAllContacts,"POST").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginNameList",resultAllPlugin,"POST").send();
         }else{
-            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/riliusers/getContacts",resultAllContacts,"POST");
+            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/PluginNameList",resultAllPlugin,"POST");
             http.resultFunArr.addItem(fun);
             http.send();
 
         }
 
     }
-    public static function resultAllContacts(result:Object,e:ResultEvent):void{
+    public static function resultAllPlugin(result:Object,e:ResultEvent):void{
         if(result.success==true){
-            contactsList.removeAll();
+            pluginList.removeAll();
             if(result.result){
-                contactsList.addAll(new ArrayCollection(result.result as Array));
+                pluginList.addAll(new ArrayCollection(result.result as Array));
             }
 
         }
