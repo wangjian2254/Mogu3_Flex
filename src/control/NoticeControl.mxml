@@ -32,7 +32,7 @@
 			
 			override public   function  init(e:FlexEvent):void{
                 changeCurrentUser(null);
-                ToolUtil.pluginRefresh();
+
 			}
 
             override public function changeCurrentUser(e:ChangeUserEvent):void{

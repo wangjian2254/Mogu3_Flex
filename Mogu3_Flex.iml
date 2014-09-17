@@ -2,7 +2,7 @@
 <module type="Flex" version="4">
   <component name="FlexBuildConfigurationManager" active="Mogu3_Flex">
     <configurations>
-      <configuration name="Mogu3_Flex" main-class="Mogu" output-file="Mogu.swf" output-folder="$MODULE_DIR$/../mogu3/swf" use-html-wrapper="true" wrapper-template-path="$MODULE_DIR$/html-template">
+      <configuration name="Mogu3_Flex" main-class="Mogu" output-file="Mogu.swf" output-folder="$MODULE_DIR$/../../gae/mogu3-gae/swf" use-html-wrapper="true" wrapper-template-path="$MODULE_DIR$/html-template">
         <dependencies target-player="11.1">
           <entries>
             <entry library-name="libs" library-level="project">

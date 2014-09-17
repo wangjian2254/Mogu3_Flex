@@ -75,6 +75,8 @@
             this.title = result.result.name + " 新成员注册";
         }
 
+        private var upload_url:String ;
+        private var upload_icon_url:String ;
         public function save():void {
 
             if (appname.text == ""||appcode.text == ""||desc.text == "") {
@@ -107,14 +109,10 @@
             HttpServiceUtil.getCHTTPServiceAndResult("/PluginUpdate", function(result:Object,e:ResultEvent):void{
                 plugin.id = result.result.pluginid;
                 dispatchEvent(new PluginEvent());
-                var upload_url:String = result.result.upload_url;
-                var upload_icon_url:String = result.result.upload_icon_url;
+                upload_url = result.result.upload_url;
+                upload_icon_url = result.result.upload_icon_url;
                 if(file.data){
-                    file_image.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, function(e:Event):void{
-                        if(file_apk.data){
-                            proceedWithUpload(upload_url);
-                        }
-                    })
+
                     proceedWithUpload(upload_icon_url);
                 }else{
                     if(file_apk.data){
@@ -207,12 +205,20 @@
                 if (result.success == true) {
                     Alert.show(result.message, "提示");
                     dispatchEvent(new PluginEvent());
-                }
+                    file = new FileReference();
+                    file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
+                    file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
+
+
+                    }
             } catch (error:Error) {
 
                 var i:Number = 1;
             }
             bar.visible = false;
+            if(file_apk.data){
+                proceedWithUpload_apk(upload_url);
+            }
         }
 
         //载入本地图片
@@ -280,6 +286,10 @@
                     img.doubleClickEnabled = true;
                     img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                     imgGroup.addElement(img);
+
+                    file_image = new FileReference();
+                    file_image.addEventListener(Event.SELECT, fileReferenceSelectHandler_image);
+                    file_image.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_image);
                 }
             } catch (error:Error) {
 
@@ -334,6 +344,9 @@
                 if (result.success == true) {
                          Alert.show(result.message,"提示");
                     dispatchEvent(new PluginEvent());
+                    file_apk = new FileReference();
+                    file_apk.addEventListener(Event.SELECT, fileReferenceSelectHandler_apk);
+                    file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
                 }
             } catch (error:Error) {
 

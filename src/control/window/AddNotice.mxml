@@ -278,7 +278,7 @@
                 var data:Object = new Object();
                 data["contentIndex"] = contentIndex;
                 data["id"] = notice.id;
-                HttpServiceUtil.getCHTTPServiceAndResult("/DeleteContentNotice", delImageResult, "POST").send(data);
+                HttpServiceUtil.getCHTTPServiceAndResult("/DeleteContentNotice", delImageResult, "get").send(data);
             }
         }
 

@@ -118,6 +118,9 @@ public class ToolUtil
             sessionUser.name = result.result.name;
             sessionUser.uid = result.result.uid;
             sessionUser.auth = result.result.auth;
+            if(sessionUser.auth == 'admin'){
+                pluginRefresh();
+            }
 //            sessionUser=u;
         }else{
             sessionUser=new User();

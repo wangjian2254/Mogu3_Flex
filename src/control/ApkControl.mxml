@@ -88,6 +88,9 @@
                     pageing.mPageSize = 30;
                     pageing.initPage();
                 }
+                if(pageing.RecordCount!=result.result.count){
+                    pageing.RecordCount = result.result.count;
+                }
                 list.removeAll();
                 list.addAll(new ArrayCollection(result.result.list as Array));
 
@@ -166,6 +169,7 @@
             var p:AddPlugin=PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,AddPlugin,true) as AddPlugin;
             p.plugin = pluginGrid.selectedItem;
             p.addEventListener(PluginEvent.PluginChange,function(e:Event):void{
+
                 getApkList();
             });
         }

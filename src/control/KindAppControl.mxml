@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						  xmlns:s="library://ns.adobe.com/flex/spark" 
+						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700" borderVisible="false" backgroundAlpha="0" xmlns:uicontrol="uicontrol.*">
+	<fx:Script>
+		<![CDATA[
+        import control.window.CreateProjectPanel;
+        import control.window.GroupMemberPanel;
+        import control.window.GroupPanel;
+        import control.window.PersonPanel;
+
+        import events.ChangeUserEvent;
+        import events.ChatTimelineEvent;
+        import events.CloseEvent;
+        import events.ListClickEvent;
+        import events.PageChangeEvent;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import json.JParser;
+
+        import mx.collections.ArrayCollection;
+        import mx.controls.Alert;
+        import mx.controls.Menu;
+        import mx.core.FlexGlobals;
+        import mx.events.FlexEvent;
+        import mx.events.ItemClickEvent;
+        import mx.events.MenuEvent;
+        import mx.managers.PopUpManager;
+        import mx.rpc.events.ResultEvent;
+
+        import util.ToolUtil;
+
+        [Bindable]
+        private var list:ArrayCollection=new ArrayCollection();
+        [Bindable]
+        private var btnlist:ArrayCollection = new ArrayCollection([{label:"置顶",icon:saveimg,mod:"down"}, {label:"移出分类",icon:saveimg,mod:"out"}]);
+
+        override public function init(e:FlexEvent):void {
+            pageing.addEventListener(PageChangeEvent.PageChange_EventStr,pagechange);
+        }
+
+
+        private function save():void{
+            if(!kindGrid.selectedItem || !appDownList.selectedItem){
+                Alert.show("请选择分类和应用")
+                return;
+            }
+            var obj:Object = new Object();
+            obj['kindid']=kindGrid.selectedItem.id;
+            obj['pluginid']=appDownList.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginAddKind", function(result:Object,e:ResultEvent):void{
+                getApkList();
+            },"get").send(obj);
+        }
+
+
+
+        private function appTop():void{
+            if(!kindGrid.selectedItem || !pluginGrid.selectedItem){
+                Alert.show("请选择分类和应用")
+                return;
+            }
+            var obj:Object = new Object();
+            obj['kindid']=kindGrid.selectedItem.id;
+            obj['pluginid']=pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginTop", function(result:Object,e:ResultEvent):void{
+                getApkList();
+            },"get").send(obj);
+        }
+        private function appOut():void{
+            if(!kindGrid.selectedItem || !pluginGrid.selectedItem){
+                Alert.show("请选择分类和应用")
+                return;
+            }
+            var obj:Object = new Object();
+            obj['kindid']=kindGrid.selectedItem.id;
+            obj['pluginid']=pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginOutKind", function(result:Object,e:ResultEvent):void{
+                getApkList();
+            },"get").send(obj);
+        }
+
+        private function selectKind():void{
+            if(kindGrid.selectedIndex>=0){
+                list.removeAll();
+                getApkList();
+            }
+        }
+
+        private function btnHandler(e:ItemClickEvent):void{
+            switch (e.item.mod){
+                case "down":
+                    appTop();
+                    break;
+                case "out":
+                    appOut();
+                    break;
+            }
+        }
+        override public function changeCurrentUser(e:ChangeUserEvent):void {
+        }
+
+        override public function closeContainer(e:CloseEvent):void {
+            dispatchEvent(e);
+        }
+
+
+        // 重新进入时执行
+        override public function reloadParamData(e:FlexEvent):void {
+            if (param) {
+                if (param.hasOwnProperty("messageType")) {
+
+                }
+
+            }
+            super.reloadParamData(e);
+        }
+
+        public function getApkList(e:Error=null):void{
+            var data:Object=getData();
+            if(!data.hasOwnProperty("kind")){
+                return;
+            }
+
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginList",getApkListResult,"get").send(data);
+        }
+
+        private function getApkListResult(result:Object,e:ResultEvent):void{
+            if(list.length==0){
+                pageing.RecordCount = result.result.count;
+                pageing.mPageSize = 30;
+                pageing.initPage();
+            }
+            list.removeAll();
+            list.addAll(new ArrayCollection(result.result.list as Array));
+
+        }
+
+
+        public function getData():Object{
+            var o:Object={};
+            if(list.length>0){
+                o['page']=pageing.PageIndex;
+            }
+            o['kind']=kindGrid.selectedItem.id;
+            return o;
+        }
+
+        private function pagechange(e:PageChangeEvent):void
+        {
+            getApkList();
+
+        }
+
+
+
+        private function activefun(item:Object, column:GridColumn):String{
+            if(item.isactive){
+                return "正常";
+            }else{
+                return item.status;
+            }
+        }
+        private function typefun(item:Object, column:GridColumn):String{
+            if(item.type=="0"){
+                return "单机";
+            }
+            if(item.type=="1"){
+                return "积分";
+            }
+            if(item.type=="2"){
+                return "多人游戏";
+            }
+            return "";
+        }
+
+        private function kindfun(item:Object, column:GridColumn):String{
+            for each(var obj:Object in ToolUtil.allkindlist){
+                if(obj.id == item.kindids[0]){
+                    return obj.name;
+                }
+            }
+            return "";
+        }
+
+        private function selectedApp():void{
+            appImage.source = "/download/"+appDownList.selectedItem.icon;
+        }
+
+        private function statusLabel(item:Object, column:GridColumn):String{
+            for each(var person:Object in ToolUtil.kindTypeList){
+                if(person.id==item.type){
+                    return person.label;
+                }
+
+            }
+            return "";
+        }
+
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<control:layout>
+		<s:VerticalLayout gap="0" >
+			
+		</s:VerticalLayout>
+	</control:layout>
+
+        <s:VGroup  width="100%" height="100%">
+            <s:BorderContainer width="100%" height="45" borderVisible="false" backgroundImage="{CBorderContainer.toolbgimg}">
+                <s:layout>
+                    <s:HorizontalLayout verticalAlign="middle" paddingLeft="20"></s:HorizontalLayout>
+                </s:layout>
+                <mx:ButtonBar id="showModel" itemClick="btnHandler(event)" dataProvider="{btnlist}" height="30" chromeColor="#faf0cc"   labelField="label" />
+            </s:BorderContainer>
+            <s:HGroup width="100%" height="100%">
+                <s:DataGrid  id="kindGrid" dataProvider="{ToolUtil.allkindlist}" width="250" height="100%" selectionChange="selectKind()">
+                    <s:columns>
+                        <s:ArrayList>
+                            <s:GridColumn dataField="name" headerText="名称" dataTipField="desc"  minWidth="100" sortable="false"></s:GridColumn>
+                            <s:GridColumn dataField="type" headerText="类型" labelFunction="statusLabel" minWidth="60"  sortable="false"></s:GridColumn>
+                            <s:GridColumn dataField="index" headerText="排序"  minWidth="60"  sortable="false"></s:GridColumn>
+                        </s:ArrayList>
+                    </s:columns>
+                </s:DataGrid>
+                <s:VGroup width="100%" height="100%">
+                    <s:Form>
+                        <s:FormItem label="应用">
+                            <s:layout>
+                                <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                            </s:layout>
+                            <s:DropDownList id="appDownList" dataProvider="{ToolUtil.pluginList}" selectedIndex="0"  labelField="name" change="selectedApp()"></s:DropDownList>
+                            <s:Image id="appImage"  height="40"></s:Image>
+                        </s:FormItem>
+                        <s:FormItem>
+                            <s:layout>
+                                <s:HorizontalLayout gap="10"/>
+                            </s:layout>
+                            <s:Button label="加入分类" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
+                            </s:Button>
+
+                        </s:FormItem>
+                    </s:Form>
+                    <s:DataGrid id="pluginGrid" width="100%" height="100%" rowHeight="30" dataProvider="{list}">
+                        <s:columns>
+                            <s:ArrayList>
+                                <s:GridColumn dataField="name" headerText="应用名称" width="150">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="icon" headerText="应用图标" width="65">
+                                    <s:itemRenderer>
+                                        <fx:Component>
+                                            <s:GridItemRenderer>
+                                                <s:HGroup width="100%" height="100%" verticalAlign="middle" gap="5" paddingLeft="5" paddingTop="3" paddingRight="3">
+                                                    <s:Image source="/download/{data.imageid}" height="30" width="30"></s:Image>
+                                                </s:HGroup>
+                                            </s:GridItemRenderer>
+                                        </fx:Component>
+                                    </s:itemRenderer>
+                                </s:GridColumn>
+                                <s:GridColumn dataField="code" headerText="应用code" width="100">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="appcode" headerText="应用包名"  width="170">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="date" headerText="创建日期" width="110">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="lastUpdateTime" headerText="最后修改日期"  width="110">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="isactive" dataTipField="status" labelFunction="activefun"  headerText="状态">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="type" labelFunction="typefun" headerText="应用类型">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="kindid" labelFunction="kindfun"  headerText="应用分类">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="username" headerText="作者">
+                                </s:GridColumn>
+                            </s:ArrayList>
+                        </s:columns>
+                    </s:DataGrid>
+                    <uicontrol:Pageing id="pageing"></uicontrol:Pageing>
+                </s:VGroup>
+            </s:HGroup>
+
+        </s:VGroup>
+
+</control:CBorderContainer>
