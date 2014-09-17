@@ -15,6 +15,7 @@
 
         import mx.controls.Alert;
         import mx.core.FlexGlobals;
+        import mx.events.CloseEvent;
         import mx.managers.CursorManager;
         import mx.managers.PopUpManager;
         import mx.rpc.events.ResultEvent;
@@ -58,7 +59,14 @@
                        kinDownList.selectedItem = obj;
                     }
                 }
-                iconImage.source = "/download?image_id="+plugin.imageid;
+                iconImage.source = "/download/"+plugin.imageid;
+                for each(var uri:String in plugin.imagelist){
+                    var img:Image = new Image();
+                    img.source = "/download/"+uri;
+                    img.doubleClickEnabled = true;
+                    img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
+                    imgGroup.addElement(img);
+                }
             }
         }
 
@@ -198,6 +206,7 @@
                 var result:Object = JParser.decode(e.data);
                 if (result.success == true) {
                     Alert.show(result.message, "提示");
+                    dispatchEvent(new PluginEvent());
                 }
             } catch (error:Error) {
 
@@ -223,7 +232,9 @@
 
         //载入本地图片
         private function fileReferenceCompleteHandler_image(e:Event):void {
+            file_image.removeEventListener(Event.COMPLETE, fileReferenceCompleteHandler_image);
             byteArray = file_image.data;
+            loader_image = new Loader();
             loader_image.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderCompleteHandler_image);
             loader_image.loadBytes(byteArray);
 
@@ -231,10 +242,10 @@
 
         //图片载入完成显示在预览框中
         private function loaderCompleteHandler_image(e:Event):void {
-            var bitmap:Bitmap = Bitmap(loader.content);
+            var bitmap:Bitmap = Bitmap(loader_image.content);
             bitmapData = bitmap.bitmapData;
-            iconImage.source = bitmap;
-
+            appImage.source = bitmap;
+//            loader_image.contentLoaderInfo.removeEventListener(Event.COMPLETE, loaderCompleteHandler_image);
             var obj:Object = new Object();
             obj["pluginid"] = plugin.id;
             HttpServiceUtil.getCHTTPServiceAndResult("/PluginImageUpdate", function(result:Object,e:ResultEvent):void{
@@ -263,12 +274,52 @@
                 if (result.success == true) {
                     Alert.show(result.message, "提示");
                     appImage.source=null;
+
+                    var img:Image = new Image();
+                    img.source = "/download/"+result.result;
+                    img.doubleClickEnabled = true;
+                    img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
+                    imgGroup.addElement(img);
                 }
             } catch (error:Error) {
 
                 var i:Number = 1;
             }
             bar.visible = false;
+        }
+
+        private var imgurl:String;
+        private function deleteImage(event:MouseEvent):void {
+            if (event.currentTarget is Image) {
+//					Alert.show(event.currentTarget.source,"图片地址");
+                imgurl = event.currentTarget.source;
+                Alert.show("确认删除双击的图片?", "提示", Alert.YES | Alert.NO, null, deleteImg);
+            }
+        }
+
+        //上传图片到服务器
+        private function deleteImg(e:mx.events.CloseEvent):void {
+            if (e.detail == Alert.YES) {
+                var data:Object = new Object();
+                var r:Array = imgurl.split("/");
+                data["imagekey"] = r[r.length-1];
+                data["pluginid"] = plugin.id;
+                HttpServiceUtil.getCHTTPServiceAndResult("/DeleteAppImage", delImageResult, "POST").send(data);
+            }
+        }
+
+        private function delImageResult(result:Object, e:ResultEvent):void {
+            if (result.success) {
+                for (var i:Number = 0; i < imgGroup.numElements; i++) {
+
+                    var img:Image = imgGroup.getElementAt(i) as Image;
+                    if (img.source == imgurl) {
+                        imgGroup.removeElement(img);
+                        dispatchEvent(new PluginEvent());
+                        break;
+                    }
+                }
+            }
         }
 
         //选择文件动作监听
@@ -282,6 +333,7 @@
                 var result:Object = JParser.decode(e.data);
                 if (result.success == true) {
                          Alert.show(result.message,"提示");
+                    dispatchEvent(new PluginEvent());
                 }
             } catch (error:Error) {
 
@@ -375,13 +427,13 @@
 	</fx:Declarations>
     <s:HGroup id="hGroup" width="100%" height="100%">
 
-        <s:Form width="450" id="form" >
+        <s:Form width="300" id="form" >
             <s:layout>
                 <s:FormLayout gap="0"></s:FormLayout>
             </s:layout>
 
             <s:FormItem id="orgNameItem" label="应用名称:" textAlign="right">
-                <s:TextInput id="appname"  width="350"  tabIndex="5" >
+                <s:TextInput id="appname"  width="200"  tabIndex="5" >
                 </s:TextInput>
             </s:FormItem>
             <s:FormItem  label="应用类型:" textAlign="right">
@@ -393,18 +445,18 @@
                 <s:RadioButton value="2" group="{typeButtonGroup}" label="多人"></s:RadioButton>
             </s:FormItem>
             <s:FormItem  label="应用code:" textAlign="right">
-                <s:TextInput id="code"  width="350"  tabIndex="5" >
+                <s:TextInput id="code"  width="200"  tabIndex="5" >
                 </s:TextInput>
             </s:FormItem>
             <s:FormItem  label="应用包名:" textAlign="right">
-                <s:TextInput id="appcode"  width="350"  tabIndex="5" >
+                <s:TextInput id="appcode"  width="200"  tabIndex="5" >
                 </s:TextInput>
             </s:FormItem>
             <s:FormItem  label="应用介绍:" textAlign="right">
-                <s:TextArea id="desc" width="350" height="100"></s:TextArea>
+                <s:TextArea id="desc" width="200" height="100"></s:TextArea>
             </s:FormItem>
             <s:FormItem  label="应用分类:" textAlign="right">
-                <s:DropDownList id="kinDownList" dataProvider="{ToolUtil.userkindlist}" labelField="name" selectedIndex="0" width="350"></s:DropDownList>
+                <s:DropDownList id="kinDownList" dataProvider="{ToolUtil.userkindlist}" labelField="name" selectedIndex="0" width="200"></s:DropDownList>
             </s:FormItem>
             <s:FormItem  label="应用图标:" textAlign="right">
                 <s:layout>
@@ -432,11 +484,11 @@
 
             </s:FormItem>
         </s:Form>
-        <s:VGroup id="appImageGroup" width="300" height="100%" horizontalAlign="left">
-           <s:Button label="选择应用图片" click="chooseApkImage()"/>
+        <s:VGroup id="appImageGroup" width="450" height="100%" horizontalAlign="left" paddingTop="5">
+           <s:Button label="选择应用图片" height="25" click="chooseApkImage()"/>
             <s:Image id="appImage" height="100"></s:Image>
-            <s:Scroller width="100%" height="100%">
-                <s:VGroup id="imgGroup" toolTip="双击删除图片">
+            <s:Scroller width="440" height="370" >
+                <s:VGroup id="imgGroup" toolTip="双击删除图片" >
 
                 </s:VGroup>
             </s:Scroller>

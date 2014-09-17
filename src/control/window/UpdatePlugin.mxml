@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window:EfficientTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+                             xmlns:s="library://ns.adobe.com/flex/spark"
+                              xmlns:uicontrol="uicontrol.*"
+                             width="630" height="300" creationComplete="init()"
+                             title="添加应用" xmlns:window="control.window.*">
+	<fx:Script>
+		<![CDATA[
+        import events.PluginEvent;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import json.JParser;
+
+        import mx.controls.Alert;
+        import mx.core.FlexGlobals;
+        import mx.events.CloseEvent;
+        import mx.managers.CursorManager;
+        import mx.managers.PopUpManager;
+        import mx.rpc.events.ResultEvent;
+
+        import util.ToolUtil;
+        private var file_apk:FileReference;
+        private var byteArray:ByteArray;
+        private var bitmapData:BitmapData;
+        private var loader:Loader = new Loader();
+        private var loader_image:Loader = new Loader();
+
+        [Bindable]
+        public var plugin:Object = new Object();
+
+
+
+        private function init():void {
+
+            file_apk = new FileReference();
+            file_apk.addEventListener(Event.SELECT, fileReferenceSelectHandler_apk);
+            file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
+
+            this.title = plugin.name + "更新apk版本";
+            desc.text = plugin.updatedesc;
+
+        }
+
+
+        public function save():void {
+
+            if (desc.text == "") {
+                Alert.show("应用更新简介必须填写", "提示");
+                return;
+            }
+            if(!file_apk.data){
+                Alert.show("请选择APK文件", "提示");
+                return;
+            }
+
+
+            var obj:Object = new Object();
+
+            if(plugin.hasOwnProperty("id")){
+                obj.pluginid = plugin.id;
+            }else{
+                Alert.show("请选择应用", "提示");
+                return;
+            }
+            obj.updatedesc = desc.text;
+
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginApkUpdate", function(result:Object,e:ResultEvent):void{
+                plugin.id = result.result.pluginid;
+                dispatchEvent(new PluginEvent());
+                var upload_url:String = result.result.upload_url;
+                    if(file_apk.data){
+                        proceedWithUpload_apk(upload_url);
+                    }
+            },"POST").send(obj);
+
+        }
+
+
+        public function foucePass(obj:Object):void {
+            obj.setFocus();
+        }
+
+
+
+        //监听文件上传状态
+        private function onProgress(e:ProgressEvent):void {
+//				lbProgress.text=" 已上传 " + e.bytesLoaded + " 字节，共 " + e.bytesTotal + " 字节";
+            var proc:uint = e.bytesLoaded / e.bytesTotal * 100;
+            bar.setProgress(proc, 100);
+            bar.label = "当前进度: " + " " + proc + "%";
+            if (e.bytesLoaded == e.bytesTotal) {
+                CursorManager.removeBusyCursor();
+            }
+        }
+
+
+
+
+
+        //选择文件动作监听
+        private function fileReferenceSelectHandler_apk(e:Event):void {
+            apkImage.visible = true;
+            file_apk.load();
+        }
+
+        private function uploadImageResult_apk(e:DataEvent):void {
+            try {
+                var result:Object = JParser.decode(e.data);
+                if (result.success == true) {
+                         Alert.show(result.message,"提示");
+                    dispatchEvent(new PluginEvent());
+                }
+            } catch (error:Error) {
+
+                var i:Number = 1;
+            }
+            bar.visible = false;
+        }
+
+        //上传图片到服务器
+        private function proceedWithUpload_apk(url:String):void {
+
+            //进度监听
+            file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            var request:URLRequest = new URLRequest(url);
+            request.method = URLRequestMethod.POST;
+
+            request.contentType = "multipart/form-data";
+
+            bar.visible = true;
+
+
+            try {
+                file_apk.upload(request, 'file', false);
+
+            }
+            catch (error:Error) {
+                Alert.show("上传失败");
+                bar.visible = false;
+            }
+
+
+        }
+
+        //上传完成调用
+        private function completeHandle_apk(event:Event):void {
+            bar.visible = false;
+            apkImage.source = null;
+        }
+
+        //载入本地图片
+        private function fileReferenceCompleteHandler_apk(e:Event):void {
+            apkImage.visible=true;
+
+        }
+
+        //选择上传的图片
+        private function chooseApk():void {
+//            file_apk.removeEventListener(Event.COMPLETE, completeHandle_apk);
+//            file_apk.addEventListener(Event.COMPLETE, fileReferenceCompleteHandler_apk);
+            var imageTypes:FileFilter = new FileFilter("File (*.apk)", "*.apk");
+            var allTypes:Array = new Array(imageTypes);
+            file_apk.browse(allTypes);
+            //                file.browse();
+        }
+
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+        <s:RadioButtonGroup id="typeButtonGroup"></s:RadioButtonGroup>
+	</fx:Declarations>
+    <s:HGroup id="hGroup" width="100%" height="100%">
+
+        <s:Form width="500" id="form" >
+            <s:layout>
+                <s:FormLayout gap="0"></s:FormLayout>
+            </s:layout>
+
+
+            <s:FormItem  label="应用跟新介绍:" textAlign="right">
+                <s:TextArea id="desc" width="400" height="100"></s:TextArea>
+            </s:FormItem>
+
+            <s:FormItem  label="apk:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
+                </s:layout>
+                <s:Image id="apkImage" source="/image/apk.png" visible="false" width="50" height="50"></s:Image>
+                <s:Button label="选择文件" click="chooseApk()"></s:Button>
+            </s:FormItem>
+            <s:FormItem>
+                <s:layout>
+                    <s:HorizontalLayout gap="10"/>
+                </s:layout>
+                <s:Button label="提交" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
+                </s:Button>
+                <s:Button label="放弃" click="closeWin()" chromeColor="#ffffff" color="#000000" height="25">
+                </s:Button>
+
+            </s:FormItem>
+        </s:Form>
+
+    </s:HGroup>
+    <uicontrol:CProgressBar id="bar" width="100%" height="100%" visible="false">
+    </uicontrol:CProgressBar>
+</window:EfficientTitleWindow>

@@ -8,6 +8,7 @@
 	<fx:Script>
 		<![CDATA[
         import control.window.AddPlugin;
+        import control.window.UpdatePlugin;
 
         import events.ChangeUserEvent;
         import events.CloseEvent;
@@ -44,17 +45,21 @@
                     pageing.enabled = true;
                     buttonArr1.addAll(new ArrayCollection([
                         {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
-                        {'label': '更新应用', 'ico': saveimg, 'mode': 'update'},
+                        {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
+                        {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
                         {'label': '设置等级', 'ico': wximg, 'mode': 'setrank'},
                         {'label': '设置房间列表', 'ico': wximg, 'mode': 'setroom'},
-                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'}
+                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
+                        {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
                     ]));
                 }else{
                     pageing.enabled = false;
                     buttonArr1.addAll(new ArrayCollection([
                         {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
-                        {'label': '更新应用', 'ico': saveimg, 'mode': 'update'},
-                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'}
+                        {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
+                        {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
+                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
+                        {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
                     ]));
                 }
                 getApkList();
@@ -164,14 +169,25 @@
                 if(e.item.mode=="update"){
                     updatePlugin();
                 }
+                if(e.item.mode=="upload"){
+                    updateApkPlugin();
+                }
                 if(e.item.mode=="del"){
-                    add();
+                    deleteImage();
                 }
                 if(e.item.mode=="setrank"){
                     add();
                 }
                 if(e.item.mode=="setroom"){
                     add();
+                }
+                if(e.item.mode=="download"){
+                    if(!pluginGrid.selectedItem){
+                        Alert.show("请选择应用。")
+                        return;
+                    }
+                    var strUrl:URLRequest = new URLRequest("/serve/"+pluginGrid.selectedItem.apkkey);
+                    navigateToURL(strUrl);
                 }
 
 			}
@@ -193,29 +209,43 @@
                 getApkList();
             });
         }
+        public function updateApkPlugin():void{
+            if(!pluginGrid.selectedItem){
+                Alert.show("请选择应用。")
+                return;
+            }
+            var p:UpdatePlugin=PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,UpdatePlugin,true) as UpdatePlugin;
+            p.plugin = pluginGrid.selectedItem;
+            p.addEventListener(PluginEvent.PluginChange,function(e:Event):void{
+                getApkList();
+            });
+        }
+
+        private function deleteImage():void {
+            if(!pluginGrid.selectedItem){
+                Alert.show("请选择应用。")
+                return;
+            }
+                Alert.show("确认删除应用 "+pluginGrid.selectedItem.name+" ?", "提示", Alert.YES | Alert.NO, null, deleteImg);
+        }
+
+        //上传图片到服务器
+        private function deleteImg(e:mx.events.CloseEvent):void {
+            if (e.detail == Alert.YES) {
+                del();
+            }
+        }
 			public function del():void{
-				var userArr:ArrayCollection=new ArrayCollection();
-				var obj:Object;
-				var item:Object;
-				for(var i:int=list.length-1;i>=0;i--){
-					item=list.getItemAt(i);
-					if(!item.selected){
-						continue;
-					}
-					obj=new Object();
-					if(item.hasOwnProperty("id")){
-						obj.id=item.id;
-						userArr.addItem(obj);
-					}
-					//					obj.name=item.name;
-					
-				}
-				if(userArr.length>0){
-//					ToolUtil.deptRefresh(refresh);
-//					ToolUtil.areaRefresh(refresh);
-//					ToolUtil.userRefresh(refresh);
-					//					HttpServiceUtil.getCHTTPServiceAndResultAndFault("/htcsgl/_100_BaseInfosAction_deletedept.action",loadDataResult,loadDataFault,"POST").send(userArr);
-				}
+                if(!pluginGrid.selectedItem){
+                    Alert.show("请选择应用。")
+                    return;
+                }
+
+                var obj:Object = new Object();
+                obj.pluginid = pluginGrid.selectedItem.id;
+                HttpServiceUtil.getCHTTPServiceAndResult("/PluginDelete", function(result:Object,e:ResultEvent):void{
+                    getApkList();
+                },"get").send(obj);
 			}
 			
 			public function show(obj:Object):void{
@@ -262,7 +292,7 @@
             if(item.isactive){
                 return "正常";
             }else{
-                return "应用需要修改";
+                return item.status;
             }
         }
         private function typefun(item:Object, column:GridColumn):String{
@@ -328,7 +358,7 @@
                                 <fx:Component>
                                     <s:GridItemRenderer>
                                         <s:HGroup width="100%" height="100%" verticalAlign="middle" gap="5" paddingLeft="5" paddingTop="3" paddingRight="3">
-                                            <s:Image source="/download?image_id={data.imageid}" height="30" width="30"></s:Image>
+                                            <s:Image source="/download/{data.imageid}" height="30" width="30"></s:Image>
                                         </s:HGroup>
                                     </s:GridItemRenderer>
                                 </fx:Component>
