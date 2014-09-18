@@ -2,10 +2,9 @@
 <window:EfficientTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
                              xmlns:s="library://ns.adobe.com/flex/spark"
                              xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:uicontrol="uicontrol.*"
-                             xmlns:conobj="uicontrol.conobj.*"
                              width="750" height="550" creationComplete="init()"
                              title="添加应用" xmlns:window="control.window.*">
-	<fx:Script>
+    <fx:Script>
 		<![CDATA[
         import events.PluginEvent;
 
@@ -14,15 +13,14 @@
         import json.JParser;
 
         import mx.controls.Alert;
-        import mx.core.FlexGlobals;
         import mx.events.CloseEvent;
         import mx.managers.CursorManager;
         import mx.managers.PopUpManager;
         import mx.rpc.events.ResultEvent;
 
         import util.DateUtil;
-
         import util.ToolUtil;
+
         private var file:FileReference;
         private var byteArray:ByteArray;
         private var bitmapData:BitmapData;
@@ -32,35 +30,34 @@
         public var notice:Object = new Object();
 
 
-
         private function init():void {
 
             file = new FileReference();
             file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
             file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
 
-            if(notice.hasOwnProperty("id")){
+            if (notice.hasOwnProperty("id")) {
                 appname.text = notice.title;
                 typeButtonGroup.selectedValue = notice.type;
                 startdate.selectedDate = DateUtil.parseLblDate(notice.startdate);
                 enddate.selectedDate = DateUtil.parseLblDate(notice.end);
 
-                for each(var p:Object in ToolUtil.pluginList){
-                    if(notice.pluginid == p.id){
+                for each(var p:Object in ToolUtil.pluginList) {
+                    if (notice.pluginid == p.id) {
                         appDownList.selectedItem = p;
                         break;
                     }
                 }
                 imgGroup.removeAllElements();
-                for each(var item:Object in notice.noticeconten){
-                    if(item.type == "img"){
+                for each(var item:Object in notice.noticeconten) {
+                    if (item.type == "img") {
                         var img:Image = new Image();
-                        img.source = "/download/"+item.imgid;
+                        img.source = "/download/" + item.imgid;
                         img.doubleClickEnabled = true;
                         img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                         imgGroup.addElement(img);
                     }
-                    if(item.type == "text"){
+                    if (item.type == "text") {
                         var lbl:Label = new Label();
                         lbl.text = item.content;
                         lbl.width = 380;
@@ -82,59 +79,59 @@
 
         public function save():void {
 
-            if (appname.text == ""||!startdate.selectedDate||!enddate.selectedDate) {
+            if (appname.text == "" || !startdate.selectedDate || !enddate.selectedDate) {
                 Alert.show("标题、起止日期必须填写", "提示");
                 return;
             }
             var obj:Object = new Object();
-            if(notice.hasOwnProperty("id")){
+            if (notice.hasOwnProperty("id")) {
                 obj.pluginid = notice.id;
             }
             obj.title = appname.text;
             obj.type = typeButtonGroup.selectedValue;
             obj.startdate = DateUtil.dateLbl(startdate.selectedDate);
             obj.enddate = DateUtil.dateLbl(enddate.selectedDate);
-            if(typeButtonGroup.selectedValue == 2){
+            if (typeButtonGroup.selectedValue == 2) {
                 obj.plugin = appDownList.selectedItem.id;
             }
-            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeUpdate", function(result:Object,e:ResultEvent):void{
+            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeUpdate", function (result:Object, e:ResultEvent):void {
                 notice = result.result;
                 dispatchEvent(new PluginEvent());
                 init();
-            },"POST").send(obj);
+            }, "POST").send(obj);
 
         }
 
-        private function appendNotice():void{
-            if(desc.text){
+        private function appendNotice():void {
+            if (desc.text) {
                 var obj:Object = new Object();
                 obj.id = notice.id;
                 obj.content = desc.text;
-                HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendContent", function(result:Object,e:ResultEvent):void{
+                HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendContent", function (result:Object, e:ResultEvent):void {
                     desc.text = "";
                     notice = result.result;
-                    if(file.data){
+                    if (file.data) {
                         var obj:Object = new Object();
                         obj.id = notice.id;
-                        HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function(result:Object,e:ResultEvent):void{
-                            if(file.data){
+                        HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function (result:Object, e:ResultEvent):void {
+                            if (file.data) {
                                 proceedWithUpload(result.result);
                             }
-                        },"get").send(obj);
-                    }else{
+                        }, "get").send(obj);
+                    } else {
                         init();
                     }
 
-                },"POST").send(obj);
-            }else{
-                if(file.data){
+                }, "POST").send(obj);
+            } else {
+                if (file.data) {
                     var obj:Object = new Object();
                     obj.id = notice.id;
-                    HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function(result:Object,e:ResultEvent):void{
-                        if(file.data){
+                    HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function (result:Object, e:ResultEvent):void {
+                        if (file.data) {
                             proceedWithUpload(result.result);
                         }
-                    },"get").send(obj);
+                    }, "get").send(obj);
                 }
             }
 
@@ -253,11 +250,11 @@
         }
 
 
-
         private var contentIndex:int;
+
         private function deleteImage(event:MouseEvent):void {
             for (var i:Number = 0; i < imgGroup.numElements; i++) {
-                if(event.currentTarget == imgGroup.getElementAt(i)){
+                if (event.currentTarget == imgGroup.getElementAt(i)) {
                     contentIndex = i;
                     break;
                 }
@@ -268,12 +265,12 @@
             }
             if (event.currentTarget is Label) {
 
-                Alert.show("确认删除: "+event.currentTarget.text, "提示", Alert.YES | Alert.NO, null, deleteImg);
+                Alert.show("确认删除: " + event.currentTarget.text, "提示", Alert.YES | Alert.NO, null, deleteImg);
             }
         }
 
         //上传图片到服务器
-        private function deleteImg(e:mx.events.CloseEvent):void {
+        private function deleteImg(e:CloseEvent):void {
             if (e.detail == Alert.YES) {
                 var data:Object = new Object();
                 data["contentIndex"] = contentIndex;
@@ -285,15 +282,13 @@
         private function delImageResult(result:Object, e:ResultEvent):void {
             if (result.success) {
                 imgGroup.removeElement(imgGroup.getElementAt(contentIndex));
-                notice.noticeconten.splice(contentIndex,1);
+                notice.noticeconten.splice(contentIndex, 1);
             }
         }
 
-        private function selectedApp():void{
-            appImage.source = "/download/"+appDownList.selectedItem.icon;
+        private function selectedApp():void {
+            appImage.source = "/download/" + appDownList.selectedItem.icon;
         }
-
-
         ]]>
 	</fx:Script>
 	<fx:Declarations>

@@ -1,19 +1,19 @@
 package httpcontrol
 {
-	import control.Loading;
-	
-	import json.JParser;
+import control.Loading;
 
-	import mx.collections.ArrayCollection;
-	import mx.controls.Alert;
-	import mx.rpc.AsyncToken;
-	import mx.rpc.events.FaultEvent;
-	import mx.rpc.events.ResultEvent;
-	import mx.rpc.http.HTTPService;
-	
-	import util.LoadingUtil;
-	
-	public class CHTTPService extends HTTPService
+import json.JParser;
+
+import mx.collections.ArrayCollection;
+import mx.controls.Alert;
+import mx.rpc.AsyncToken;
+import mx.rpc.events.FaultEvent;
+import mx.rpc.events.ResultEvent;
+import mx.rpc.http.HTTPService;
+
+import util.LoadingUtil;
+
+public class CHTTPService extends HTTPService
 	{
 		[Bindable]
 		public static var baseUrl:String="";
@@ -40,9 +40,12 @@ package httpcontrol
 		{
 			try{
 				this.loading.showIn();
-                if(this.url.indexOf(baseUrl)<0){
-                    this.url=baseUrl+this.url;
+                if(this.url.indexOf("http")!=0){
+                    if(baseUrl.length>0&&this.url.indexOf(baseUrl)<0){
+                        this.url=baseUrl+this.url;
+                    }
                 }
+
 				if(this.url.indexOf("?")!=-1){
 					this.url+="&requesttimestr="+(new Date()).toString();
 				}else{

@@ -4,92 +4,82 @@
 						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700" borderVisible="false" backgroundAlpha="0" xmlns:uicontrol="uicontrol.*">
 	<fx:Script>
 		<![CDATA[
-        import control.window.CreateProjectPanel;
-        import control.window.GroupMemberPanel;
-        import control.window.GroupPanel;
-        import control.window.PersonPanel;
-
         import events.ChangeUserEvent;
-        import events.ChatTimelineEvent;
         import events.CloseEvent;
-        import events.ListClickEvent;
         import events.PageChangeEvent;
 
         import httpcontrol.HttpServiceUtil;
 
-        import json.JParser;
-
         import mx.collections.ArrayCollection;
         import mx.controls.Alert;
-        import mx.controls.Menu;
-        import mx.core.FlexGlobals;
         import mx.events.FlexEvent;
         import mx.events.ItemClickEvent;
-        import mx.events.MenuEvent;
-        import mx.managers.PopUpManager;
         import mx.rpc.events.ResultEvent;
 
         import util.ToolUtil;
 
         [Bindable]
-        private var list:ArrayCollection=new ArrayCollection();
+        private var list:ArrayCollection = new ArrayCollection();
         [Bindable]
-        private var btnlist:ArrayCollection = new ArrayCollection([{label:"置顶",icon:saveimg,mod:"down"}, {label:"移出分类",icon:saveimg,mod:"out"}]);
+        private var btnlist:ArrayCollection = new ArrayCollection([
+            {label: "置顶", icon: saveimg, mod: "down"},
+            {label: "移出分类", icon: saveimg, mod: "out"}
+        ]);
 
         override public function init(e:FlexEvent):void {
-            pageing.addEventListener(PageChangeEvent.PageChange_EventStr,pagechange);
+            pageing.addEventListener(PageChangeEvent.PageChange_EventStr, pagechange);
         }
 
 
-        private function save():void{
-            if(!kindGrid.selectedItem || !appDownList.selectedItem){
+        private function save():void {
+            if (!kindGrid.selectedItem || !appDownList.selectedItem) {
                 Alert.show("请选择分类和应用")
                 return;
             }
             var obj:Object = new Object();
-            obj['kindid']=kindGrid.selectedItem.id;
-            obj['pluginid']=appDownList.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginAddKind", function(result:Object,e:ResultEvent):void{
+            obj['kindid'] = kindGrid.selectedItem.id;
+            obj['pluginid'] = appDownList.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginAddKind", function (result:Object, e:ResultEvent):void {
                 getApkList();
-            },"get").send(obj);
+            }, "get").send(obj);
         }
 
 
-
-        private function appTop():void{
-            if(!kindGrid.selectedItem || !pluginGrid.selectedItem){
+        private function appTop():void {
+            if (!kindGrid.selectedItem || !pluginGrid.selectedItem) {
                 Alert.show("请选择分类和应用")
                 return;
             }
             var obj:Object = new Object();
-            obj['kindid']=kindGrid.selectedItem.id;
-            obj['pluginid']=pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginTop", function(result:Object,e:ResultEvent):void{
+            obj['kindid'] = kindGrid.selectedItem.id;
+            obj['pluginid'] = pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginTop", function (result:Object, e:ResultEvent):void {
                 getApkList();
-            },"get").send(obj);
+            }, "get").send(obj);
         }
-        private function appOut():void{
-            if(!kindGrid.selectedItem || !pluginGrid.selectedItem){
+
+        private function appOut():void {
+            if (!kindGrid.selectedItem || !pluginGrid.selectedItem) {
                 Alert.show("请选择分类和应用")
                 return;
             }
             var obj:Object = new Object();
-            obj['kindid']=kindGrid.selectedItem.id;
-            obj['pluginid']=pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginOutKind", function(result:Object,e:ResultEvent):void{
+            obj['kindid'] = kindGrid.selectedItem.id;
+            obj['pluginid'] = pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginOutKind", function (result:Object, e:ResultEvent):void {
                 getApkList();
-            },"get").send(obj);
+            }, "get").send(obj);
         }
 
-        private function selectKind():void{
-            if(kindGrid.selectedIndex>=0){
+        private function selectKind():void {
+            if (kindGrid.selectedIndex >= 0) {
                 list.removeAll();
                 getApkList();
             }
         }
 
-        private function btnHandler(e:ItemClickEvent):void{
-            switch (e.item.mod){
+        private function btnHandler(e:ItemClickEvent):void {
+            switch (e.item.mod) {
                 case "down":
                     appTop();
                     break;
@@ -98,6 +88,7 @@
                     break;
             }
         }
+
         override public function changeCurrentUser(e:ChangeUserEvent):void {
         }
 
@@ -117,17 +108,17 @@
             super.reloadParamData(e);
         }
 
-        public function getApkList(e:Error=null):void{
-            var data:Object=getData();
-            if(!data.hasOwnProperty("kind")){
+        public function getApkList(e:Error = null):void {
+            var data:Object = getData();
+            if (!data.hasOwnProperty("kind")) {
                 return;
             }
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginList",getApkListResult,"get").send(data);
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "get").send(data);
         }
 
-        private function getApkListResult(result:Object,e:ResultEvent):void{
-            if(list.length==0){
+        private function getApkListResult(result:Object, e:ResultEvent):void {
+            if (list.length == 0) {
                 pageing.RecordCount = result.result.count;
                 pageing.mPageSize = 30;
                 pageing.initPage();
@@ -138,66 +129,64 @@
         }
 
 
-        public function getData():Object{
-            var o:Object={};
-            if(list.length>0){
-                o['page']=pageing.PageIndex;
+        public function getData():Object {
+            var o:Object = {};
+            if (list.length > 0) {
+                o['page'] = pageing.PageIndex;
             }
-            o['kind']=kindGrid.selectedItem.id;
+            o['kind'] = kindGrid.selectedItem.id;
             return o;
         }
 
-        private function pagechange(e:PageChangeEvent):void
-        {
+        private function pagechange(e:PageChangeEvent):void {
             getApkList();
 
         }
 
 
-
-        private function activefun(item:Object, column:GridColumn):String{
-            if(item.isactive){
+        private function activefun(item:Object, column:GridColumn):String {
+            if (item.isactive) {
                 return "正常";
-            }else{
+            } else {
                 return item.status;
             }
         }
-        private function typefun(item:Object, column:GridColumn):String{
-            if(item.type=="0"){
+
+        private function typefun(item:Object, column:GridColumn):String {
+            if (item.type == "0") {
                 return "单机";
             }
-            if(item.type=="1"){
+            if (item.type == "1") {
                 return "积分";
             }
-            if(item.type=="2"){
+            if (item.type == "2") {
                 return "多人游戏";
             }
             return "";
         }
 
-        private function kindfun(item:Object, column:GridColumn):String{
-            for each(var obj:Object in ToolUtil.allkindlist){
-                if(obj.id == item.kindids[0]){
+        private function kindfun(item:Object, column:GridColumn):String {
+            for each(var obj:Object in ToolUtil.allkindlist) {
+                if (obj.id == item.kindids[0]) {
                     return obj.name;
                 }
             }
             return "";
         }
 
-        private function selectedApp():void{
-            appImage.source = "/download/"+appDownList.selectedItem.icon;
+        private function selectedApp():void {
+            appImage.source = "/download/" + appDownList.selectedItem.icon;
         }
 
-        private function statusLabel(item:Object, column:GridColumn):String{
-            for each(var person:Object in ToolUtil.kindTypeList){
-                if(person.id==item.type){
+        private function statusLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.kindTypeList) {
+                if (person.id == item.type) {
                     return person.label;
                 }
 
             }
             return "";
         }
-
         ]]>
 	</fx:Script>
 	<fx:Declarations>
@@ -262,17 +251,13 @@
                                 </s:GridColumn>
                                 <s:GridColumn dataField="code" headerText="应用code" width="100">
                                 </s:GridColumn>
-                                <s:GridColumn dataField="appcode" headerText="应用包名"  width="170">
-                                </s:GridColumn>
-                                <s:GridColumn dataField="date" headerText="创建日期" width="110">
-                                </s:GridColumn>
                                 <s:GridColumn dataField="lastUpdateTime" headerText="最后修改日期"  width="110">
                                 </s:GridColumn>
                                 <s:GridColumn dataField="isactive" dataTipField="status" labelFunction="activefun"  headerText="状态">
                                 </s:GridColumn>
                                 <s:GridColumn dataField="type" labelFunction="typefun" headerText="应用类型">
                                 </s:GridColumn>
-                                <s:GridColumn dataField="kindid" labelFunction="kindfun"  headerText="应用分类">
+                                <s:GridColumn dataField="downnum" headerText="下载量">
                                 </s:GridColumn>
                                 <s:GridColumn dataField="username" headerText="作者">
                                 </s:GridColumn>

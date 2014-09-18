@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window:EfficientTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+                             width="750" height="550" creationComplete="init()"
+                             title="添加应用" xmlns:window="control.window.*">
+    <fx:Script>
+		<![CDATA[
+
+
+        [Bindable]
+        public var plugin:Object = new Object();
+        private function init():void {
+            rankAppCanvas.plugin = plugin;
+            rankAppCanvas.init();
+
+            this.title = "设置 "+plugin.name+" 的等级";
+
+        }
+
+
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+    <window:RoomAppCanvas id="rankAppCanvas"  top="5" bottom="5" right="5" left="5">
+
+    </window:RoomAppCanvas>
+</window:EfficientTitleWindow>

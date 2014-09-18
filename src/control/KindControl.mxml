@@ -1,122 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
-						  xmlns:s="library://ns.adobe.com/flex/spark" 
-						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700" borderVisible="false" backgroundAlpha="0" xmlns:uicontrol="uicontrol.*">
-	<fx:Script>
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700"
+                          borderVisible="false" backgroundAlpha="0">
+    <fx:Script>
 		<![CDATA[
-        import control.window.CreateProjectPanel;
-        import control.window.GroupMemberPanel;
-        import control.window.GroupPanel;
-        import control.window.PersonPanel;
-
         import events.ChangeUserEvent;
-        import events.ChatTimelineEvent;
         import events.CloseEvent;
-        import events.ListClickEvent;
 
         import httpcontrol.HttpServiceUtil;
 
-        import json.JParser;
-
         import mx.collections.ArrayCollection;
         import mx.controls.Alert;
-        import mx.controls.Menu;
-        import mx.core.FlexGlobals;
         import mx.events.FlexEvent;
         import mx.events.ItemClickEvent;
-        import mx.events.MenuEvent;
-        import mx.managers.PopUpManager;
         import mx.rpc.events.ResultEvent;
 
         import util.ToolUtil;
 
         [Bindable]
-        private var btnlist:ArrayCollection = new ArrayCollection([{label:"新建分类",icon:addimg,mod:"add"},{label:"上移",icon:saveimg,mod:"up"},{label:"下移",icon:saveimg,mod:"down"}]);
+        private var btnlist:ArrayCollection = new ArrayCollection([
+            {label: "新建分类", icon: addimg, mod: "add"},
+            {label: "上移", icon: saveimg, mod: "up"},
+            {label: "下移", icon: saveimg, mod: "down"}
+        ]);
 
         override public function init(e:FlexEvent):void {
 
         }
 
-        private var kind:Object=new Object();
+        private var kind:Object = new Object();
 
-        private function save():void{
+        private function save():void {
             var obj:Object = new Object();
-            if(kind.hasOwnProperty("id")){
-                obj['id']=kind.id;
+            if (kind.hasOwnProperty("id")) {
+                obj['id'] = kind.id;
             }
             obj.name = nameInput.text;
             obj.type = typeDownList.selectedItem.id;
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindUpdate", function(result:Object,e:ResultEvent):void{
+            HttpServiceUtil.getCHTTPServiceAndResult("/KindUpdate", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
                 kind.id = result.result;
-            },"POST").send(obj);
+            }, "POST").send(obj);
         }
 
-        private function del():void{
+        private function del():void {
             var obj:Object = new Object();
-            if(kind.hasOwnProperty("id")){
-                obj['id']=kind.id;
-            }else{
+            if (kind.hasOwnProperty("id")) {
+                obj['id'] = kind.id;
+            } else {
                 Alert.show("请选择一个分类");
                 return;
             }
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindDelete", function(result:Object,e:ResultEvent):void{
+            HttpServiceUtil.getCHTTPServiceAndResult("/KindDelete", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
                 clearKind();
-            },"POST").send(obj);
+            }, "POST").send(obj);
         }
 
-        private function kindDown():void{
+        private function kindDown():void {
             var obj:Object = new Object();
-            if(kind.hasOwnProperty("id")){
-                obj['id']=kind.id;
-            }else{
+            if (kind.hasOwnProperty("id")) {
+                obj['id'] = kind.id;
+            } else {
                 Alert.show("请选择一个分类");
                 return;
             }
-            obj['fx']="down";
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindMove",  function(result:Object,e:ResultEvent):void{
+            obj['fx'] = "down";
+            HttpServiceUtil.getCHTTPServiceAndResult("/KindMove", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
-            },"POST").send(obj);
+            }, "POST").send(obj);
         }
 
-        private function kindUp():void{
+        private function kindUp():void {
             var obj:Object = new Object();
-            if(kind.hasOwnProperty("id")){
-                obj['id']=kind.id;
-            }else{
+            if (kind.hasOwnProperty("id")) {
+                obj['id'] = kind.id;
+            } else {
                 Alert.show("请选择一个分类");
                 return;
             }
-            obj['fx']="up";
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindMove",  function(result:Object,e:ResultEvent):void{
+            obj['fx'] = "up";
+            HttpServiceUtil.getCHTTPServiceAndResult("/KindMove", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
-            },"POST").send(obj);
+            }, "POST").send(obj);
         }
 
-        private function clearKind():void{
+        private function clearKind():void {
             kind = new Object();
             nameInput.text = "";
-            kindGrid.selectedIndex=-1;
+            kindGrid.selectedIndex = -1;
         }
 
-        private function selectKind():void{
-            if(kindGrid.selectedIndex>=0){
+        private function selectKind():void {
+            if (kindGrid.selectedIndex >= 0) {
                 kind = kindGrid.selectedItem;
                 nameInput.text = kind.name;
-                for each(var item:Object in ToolUtil.kindTypeList){
-                    if(item.id==kind.type){
+                for each(var item:Object in ToolUtil.kindTypeList) {
+                    if (item.id == kind.type) {
                         typeDownList.selectedItem = item;
                     }
                 }
             }
         }
 
-        private function btnHandler(e:ItemClickEvent):void{
-            switch (e.item.mod){
+        private function btnHandler(e:ItemClickEvent):void {
+            switch (e.item.mod) {
                 case "add":
-                        clearKind();
+                    clearKind();
                     break;
                 case "up":
                     kindUp();
@@ -126,6 +118,7 @@
                     break;
             }
         }
+
         override public function changeCurrentUser(e:ChangeUserEvent):void {
         }
 
@@ -146,11 +139,9 @@
         }
 
 
-
-
-        private function managerLabel(item:Object,column:GridColumn):String{
-            for each(var person:Object in ToolUtil.memberList){
-                if(person.id==item.manager){
+        private function managerLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.memberList) {
+                if (person.id == item.manager) {
                     return person.name;
                 }
 
@@ -158,9 +149,9 @@
             return "";
         }
 
-        private function fatherProjectLabel(item:Object,column:GridColumn):String{
-            for each(var person:Object in ToolUtil.allProjectList){
-                if(person.id==item.fproject){
+        private function fatherProjectLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.allProjectList) {
+                if (person.id == item.fproject) {
                     return person.name;
                 }
 
@@ -169,16 +160,15 @@
         }
 
 
-        private function statusLabel(item:Object, column:GridColumn):String{
-            for each(var person:Object in ToolUtil.kindTypeList){
-                if(person.id==item.type){
+        private function statusLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.kindTypeList) {
+                if (person.id == item.type) {
                     return person.label;
                 }
 
             }
             return "";
         }
-
         ]]>
 	</fx:Script>
 	<fx:Declarations>

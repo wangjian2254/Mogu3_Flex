@@ -7,15 +7,7 @@
 	</s:layout>
 	<fx:Script>
 		<![CDATA[
-        import control.window.SchedulePanel;
-        import control.ScheduleShow;
-
         import mx.controls.Alert;
-        import mx.core.FlexGlobals;
-        import mx.managers.PopUpManager;
-
-        import util.ScheduleUtil;
-        import util.ToolUtil;
 
         [Bindable]
         public var color:Number = 0xffffff;

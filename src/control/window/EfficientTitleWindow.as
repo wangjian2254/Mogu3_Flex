@@ -12,7 +12,6 @@ import mx.events.FlexEvent;
 import mx.managers.PopUpManager;
 
 import spark.components.TitleWindow;
-
 import spark.effects.Move;
 
 public class EfficientTitleWindow extends TitleWindow{

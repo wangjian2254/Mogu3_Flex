@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*"
+                          xmlns:window="control.window.*" width="700" height="700" borderVisible="false"
+                          backgroundAlpha="0">
+    <fx:Script>
+		<![CDATA[
+        import events.ChangeUserEvent;
+        import events.CloseEvent;
+        import events.PageChangeEvent;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import mx.collections.ArrayCollection;
+        import mx.controls.Alert;
+        import mx.events.FlexEvent;
+        import mx.events.ItemClickEvent;
+        import mx.rpc.events.ResultEvent;
+
+        import util.ToolUtil;
+
+        [Bindable]
+        private var list:ArrayCollection = new ArrayCollection();
+
+        [Bindable]
+        private var btnlist:ArrayCollection = new ArrayCollection([
+            {label: "刷新数据", icon: CBorderContainer.refreshimg, mod: "refresh"}
+        ]);
+
+
+        override public function init(e:FlexEvent):void {
+
+            getApkList();
+        }
+
+
+        override public function changeCurrentUser(e:ChangeUserEvent):void {
+        }
+
+        override public function closeContainer(e:CloseEvent):void {
+            dispatchEvent(e);
+        }
+
+
+        // 重新进入时执行
+        override public function reloadParamData(e:FlexEvent):void {
+            if (param) {
+                if (param.hasOwnProperty("messageType")) {
+
+                }
+
+            }
+            super.reloadParamData(e);
+        }
+
+
+        private function btnHandler(e:ItemClickEvent):void {
+            switch (e.item.mod) {
+                case "refresh":
+                    getApkList();
+                    rankAppCanvas.plugin = new Object();
+                    rankAppCanvas.init();
+                    break;
+
+            }
+        }
+
+        public function getApkList(e:Error = null):void {
+
+            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RoomPluginList", function (result:Object, e:ResultEvent):void {
+                var data:Object = new Object();
+                data['pluginids'] = result.result;
+                if (!data.pluginids) {
+                    data.pluginids = "";
+                }
+                HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "POST").send(data);
+            }, "get").send();
+        }
+
+        private function getApkListResult(result:Object, e:ResultEvent):void {
+
+            list.removeAll();
+            list.addAll(new ArrayCollection(result.result.list as Array));
+
+        }
+
+
+        public function getData():Object {
+            var o:Object = {};
+
+            return o;
+        }
+
+        private function pagechange(e:PageChangeEvent):void {
+            getApkList();
+
+        }
+
+
+        private function activefun(item:Object, column:GridColumn):String {
+            if (item.isactive) {
+                return "正常";
+            } else {
+                return item.status;
+            }
+        }
+
+        private function typefun(item:Object, column:GridColumn):String {
+            if (item.type == "0") {
+                return "单机";
+            }
+            if (item.type == "1") {
+                return "积分";
+            }
+            if (item.type == "2") {
+                return "多人游戏";
+            }
+            return "";
+        }
+
+        private function kindfun(item:Object, column:GridColumn):String {
+            for each(var obj:Object in ToolUtil.allkindlist) {
+                if (obj.id == item.kindids[0]) {
+                    return obj.name;
+                }
+            }
+            return "";
+        }
+
+        private function selectedApp():void {
+            if (!pluginGrid.selectedItem) {
+                Alert.show("请选择应用")
+                return;
+            }
+            rankAppCanvas.plugin = pluginGrid.selectedItem;
+            rankAppCanvas.init();
+        }
+
+        private function statusLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.kindTypeList) {
+                if (person.id == item.type) {
+                    return person.label;
+                }
+
+            }
+            return "";
+        }
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<control:layout>
+		<s:VerticalLayout gap="0" >
+			
+		</s:VerticalLayout>
+	</control:layout>
+            <s:HGroup width="100%" height="100%">
+                <s:VGroup width="600" height="100%">
+                    <s:BorderContainer width="100%" height="45" borderVisible="false" backgroundImage="{CBorderContainer.toolbgimg}">
+                        <s:layout>
+                            <s:HorizontalLayout verticalAlign="middle" paddingLeft="20"></s:HorizontalLayout>
+                        </s:layout>
+                        <mx:ButtonBar id="showModel" itemClick="btnHandler(event)" dataProvider="{btnlist}" height="30" chromeColor="#faf0cc"   labelField="label" />
+                    </s:BorderContainer>
+                    <s:DataGrid id="pluginGrid" width="100%" height="100%" rowHeight="30" dataProvider="{list}" selectionChange="selectedApp()">
+                        <s:columns>
+                            <s:ArrayList>
+                                <s:GridColumn dataField="name" headerText="应用名称" width="150">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="icon" headerText="应用图标" width="65">
+                                    <s:itemRenderer>
+                                        <fx:Component>
+                                            <s:GridItemRenderer>
+                                                <s:HGroup width="100%" height="100%" verticalAlign="middle" gap="5" paddingLeft="5" paddingTop="3" paddingRight="3">
+                                                    <s:Image source="/download/{data.imageid}" height="30" width="30"></s:Image>
+                                                </s:HGroup>
+                                            </s:GridItemRenderer>
+                                        </fx:Component>
+                                    </s:itemRenderer>
+                                </s:GridColumn>
+                                <s:GridColumn dataField="code" headerText="应用code" width="100">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="appcode" headerText="应用包名"  width="110">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="type" labelFunction="typefun" headerText="应用类型">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="username" headerText="作者">
+                                </s:GridColumn>
+                            </s:ArrayList>
+                        </s:columns>
+                    </s:DataGrid>
+                </s:VGroup>
+                <window:RoomAppCanvas id="rankAppCanvas" width="100%" height="100%">
+
+                </window:RoomAppCanvas>
+            </s:HGroup>
+</control:CBorderContainer>

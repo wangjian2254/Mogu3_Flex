@@ -1,22 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
-						  xmlns:s="library://ns.adobe.com/flex/spark" 
-						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700" borderVisible="false" backgroundAlpha="0" xmlns:uicontrol="uicontrol.*">
-	<fx:Script>
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" width="700" height="700"
+                          borderVisible="false" backgroundAlpha="0">
+    <fx:Script>
 		<![CDATA[
         import control.window.CreateProjectPanel;
-        import control.window.GroupMemberPanel;
-        import control.window.GroupPanel;
         import control.window.PersonPanel;
 
         import events.ChangeUserEvent;
-        import events.ChatTimelineEvent;
         import events.CloseEvent;
         import events.ListClickEvent;
 
         import httpcontrol.HttpServiceUtil;
-
-        import json.JParser;
 
         import mx.collections.ArrayCollection;
         import mx.controls.Alert;
@@ -28,32 +24,31 @@
         import mx.managers.PopUpManager;
         import mx.rpc.events.ResultEvent;
 
-        import org.idream.pomelo.Pomelo;
-        import org.idream.pomelo.PomeloEvent;
-
-        import util.ChatManager;
-        import util.DateUtil;
         import util.RightClickManager;
         import util.ToolUtil;
 
         [Bindable]
-        private var btnlist:ArrayCollection = new ArrayCollection([{label:"新建项目",icon:addimg,mod:"add"},{label:"修改项目",icon:saveimg,mod:"update"},{label:"删除",icon:delimg,mod:"del"}]);
+        private var btnlist:ArrayCollection = new ArrayCollection([
+            {label: "新建项目", icon: addimg, mod: "add"},
+            {label: "修改项目", icon: saveimg, mod: "update"},
+            {label: "删除", icon: delimg, mod: "del"}
+        ]);
 
         override public function init(e:FlexEvent):void {
 
         }
 
-        private function btnHandler(e:ItemClickEvent):void{
-            switch (e.item.mod){
+        private function btnHandler(e:ItemClickEvent):void {
+            switch (e.item.mod) {
                 case "add":
-                    PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,CreateProjectPanel,true) as CreateProjectPanel;
+                    PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, CreateProjectPanel, true) as CreateProjectPanel;
                     break;
                 case "update":
-                    if(projectGrid.selectedItem!=null){
-                        var p:CreateProjectPanel = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,CreateProjectPanel,true) as CreateProjectPanel;
+                    if (projectGrid.selectedItem != null) {
+                        var p:CreateProjectPanel = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, CreateProjectPanel, true) as CreateProjectPanel;
                         p.projectData = projectGrid.selectedItem;
-                    }else{
-                        Alert.show("请选择一个项目","提醒");
+                    } else {
+                        Alert.show("请选择一个项目", "提醒");
                     }
 
                     break;
@@ -151,9 +146,9 @@
 
         }
 
-        private function managerLabel(item:Object,column:GridColumn):String{
-            for each(var person:Object in ToolUtil.memberList){
-                if(person.id==item.manager){
+        private function managerLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.memberList) {
+                if (person.id == item.manager) {
                     return person.name;
                 }
 
@@ -161,9 +156,9 @@
             return "";
         }
 
-        private function fatherProjectLabel(item:Object,column:GridColumn):String{
-            for each(var person:Object in ToolUtil.allProjectList){
-                if(person.id==item.fproject){
+        private function fatherProjectLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.allProjectList) {
+                if (person.id == item.fproject) {
                     return person.name;
                 }
 
@@ -171,25 +166,25 @@
             return "";
         }
 
-        private function departmentLabel(item:Object, column:GridColumn):String{
-            for each(var person:Object in ToolUtil.departMentList){
-                if(person.id==item.department){
+        private function departmentLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.departMentList) {
+                if (person.id == item.department) {
                     return person.name;
                 }
 
             }
             return "";
         }
-        private function statusLabel(item:Object, column:GridColumn):String{
-            for each(var person:Object in ToolUtil.projectstatus){
-                if(person.id==item.status){
+
+        private function statusLabel(item:Object, column:GridColumn):String {
+            for each(var person:Object in ToolUtil.projectstatus) {
+                if (person.id == item.status) {
                     return person.label;
                 }
 
             }
             return "";
         }
-
         ]]>
 	</fx:Script>
 	<fx:Declarations>

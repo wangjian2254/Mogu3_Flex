@@ -16,10 +16,6 @@
         import mx.controls.Alert;
         import mx.events.FlexEvent;
 
-
-        import org.idream.pomelo.Pomelo;
-        import org.idream.pomelo.PomeloEvent;
-
         private var pomelo:Pomelo;
 
         override public function init(e:FlexEvent):void {

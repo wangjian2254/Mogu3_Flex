@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:mx="library://ns.adobe.com/flex/mx" width="700" height="700" borderVisible="false"
+                   backgroundAlpha="0"
+                   creationComplete="init()">
+    <fx:Script>
+		<![CDATA[
+        import control.CBorderContainer;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import mx.collections.ArrayCollection;
+        import mx.controls.Alert;
+        import mx.events.ItemClickEvent;
+        import mx.rpc.events.ResultEvent;
+
+        import util.ToolUtil;
+
+        [Bindable]
+        public var plugin:Object = new Object();
+
+        [Bindable]
+        private var btnlist:ArrayCollection = new ArrayCollection([
+            {label: "保存", icon: CBorderContainer.saveimg, mod: "save"}
+        ]);
+
+        public function init():void {
+            if (!plugin.hasOwnProperty("id")) {
+                numericStepper.value = null;
+                roomBz.visible = true;
+                return;
+            }
+            roomBz.visible = false;
+            selectedApp();
+        }
+
+
+        private function save():void {
+            if (!plugin.hasOwnProperty("id")) {
+                Alert.show("请选择应用")
+                return;
+            }
+            var obj:Object = new Object();
+            obj['appcode'] = plugin.appcode;
+            obj['id'] = plugin.id;
+            obj['num'] = numericStepper.value;
+            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RoomCreate", function (result:Object, e:ResultEvent):void {
+                selectedApp();
+            }, "POST").send(obj);
+        }
+
+
+        private function btnHandler(e:ItemClickEvent):void {
+            switch (e.item.mod) {
+                case "add":
+                    break;
+                case "save":
+                    save();
+                    break;
+            }
+        }
+
+
+        private function selectedApp():void {
+            if (!plugin.hasOwnProperty("id")) {
+                return;
+            }
+            var data:Object = new Object();
+            data['appcode'] = plugin.appcode;
+            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RoomCreate", function (result:Object, e:ResultEvent):void {
+                if (result.result.appcode == plugin.appcode) {
+                    numericStepper.value = result.result.roomnum;
+                    if (result.result.roomnum == 0) {
+                        roomBz.visible = true;
+                    } else {
+                        roomBz.visible = false;
+                    }
+                }
+            }, "get").send(data);
+        }
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout gap="0" >
+			
+		</s:VerticalLayout>
+	</s:layout>
+
+            <s:VGroup width="100%" height="100%">
+                <s:Form>
+                    <s:FormItem label="房间数量">
+                        <s:layout>
+                            <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                        </s:layout>
+                        <s:NumericStepper id="numericStepper" minimum="10" maximum="2000" width="200"></s:NumericStepper>
+                        <s:Label text="尚未创建房间" color="red" id="roomBz"></s:Label>
+                    </s:FormItem>
+                    <mx:ControlBar>
+                        <s:Button chromeColor="red" color="#ffffff" label="保存" height="25" click="save()"></s:Button>
+                    </mx:ControlBar>
+                </s:Form>
+            </s:VGroup>
+</s:BorderContainer>

@@ -1,8 +1,6 @@
 package util
 {
-import control.window.ApplyOrgPanel;
 import control.window.JoinOrgPanel;
-import control.Loading;
 import control.window.LoginUserPanel;
 import control.window.RegisterUserPanel;
 import control.window.SelectOrgPanel;
@@ -11,27 +9,17 @@ import events.ChangeScheduleEvent;
 import events.ChangeUserEvent;
 
 import flash.events.TimerEvent;
-import flash.net.URLRequest;
-import flash.net.navigateToURL;
-import flash.system.System;
 import flash.utils.Timer;
 
 import httpcontrol.CHTTPService;
 import httpcontrol.HttpServiceUtil;
-import httpcontrol.RemoteUtil;
 
 import model.User;
 
 import mx.collections.ArrayCollection;
-import mx.controls.Alert;
 import mx.core.FlexGlobals;
-import mx.managers.PopUpManager;
-import mx.rpc.AbstractOperation;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
-import mx.utils.ObjectUtil;
-
-import spark.components.Application;
 
 public class ToolUtil
 {
@@ -119,6 +107,7 @@ public class ToolUtil
             sessionUser.uid = result.result.uid;
             sessionUser.auth = result.result.auth;
             if(sessionUser.auth == 'admin'){
+                sessionUser.rankurl = result.result.rankurl;
                 pluginRefresh();
             }
 //            sessionUser=u;

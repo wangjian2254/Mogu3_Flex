@@ -13,13 +13,9 @@
         import json.JParser;
 
         import mx.controls.Alert;
-        import mx.core.FlexGlobals;
-        import mx.events.CloseEvent;
         import mx.managers.CursorManager;
-        import mx.managers.PopUpManager;
         import mx.rpc.events.ResultEvent;
 
-        import util.ToolUtil;
         private var file_apk:FileReference;
         private var byteArray:ByteArray;
         private var bitmapData:BitmapData;
@@ -28,7 +24,6 @@
 
         [Bindable]
         public var plugin:Object = new Object();
-
 
 
         private function init():void {
@@ -49,7 +44,7 @@
                 Alert.show("应用更新简介必须填写", "提示");
                 return;
             }
-            if(!file_apk.data){
+            if (!file_apk.data) {
                 Alert.show("请选择APK文件", "提示");
                 return;
             }
@@ -57,22 +52,22 @@
 
             var obj:Object = new Object();
 
-            if(plugin.hasOwnProperty("id")){
+            if (plugin.hasOwnProperty("id")) {
                 obj.pluginid = plugin.id;
-            }else{
+            } else {
                 Alert.show("请选择应用", "提示");
                 return;
             }
             obj.updatedesc = desc.text;
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginApkUpdate", function(result:Object,e:ResultEvent):void{
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginApkUpdate", function (result:Object, e:ResultEvent):void {
                 plugin.id = result.result.pluginid;
                 dispatchEvent(new PluginEvent());
                 var upload_url:String = result.result.upload_url;
-                    if(file_apk.data){
-                        proceedWithUpload_apk(upload_url);
-                    }
-            },"POST").send(obj);
+                if (file_apk.data) {
+                    proceedWithUpload_apk(upload_url);
+                }
+            }, "POST").send(obj);
 
         }
 
@@ -80,7 +75,6 @@
         public function foucePass(obj:Object):void {
             obj.setFocus();
         }
-
 
 
         //监听文件上传状态
@@ -95,9 +89,6 @@
         }
 
 
-
-
-
         //选择文件动作监听
         private function fileReferenceSelectHandler_apk(e:Event):void {
             apkImage.visible = true;
@@ -108,7 +99,7 @@
             try {
                 var result:Object = JParser.decode(e.data);
                 if (result.success == true) {
-                         Alert.show(result.message,"提示");
+                    Alert.show(result.message, "提示");
                     dispatchEvent(new PluginEvent());
                 }
             } catch (error:Error) {
@@ -151,7 +142,7 @@
 
         //载入本地图片
         private function fileReferenceCompleteHandler_apk(e:Event):void {
-            apkImage.visible=true;
+            apkImage.visible = true;
 
         }
 
@@ -164,7 +155,6 @@
             file_apk.browse(allTypes);
             //                file.browse();
         }
-
         ]]>
 	</fx:Script>
 	<fx:Declarations>

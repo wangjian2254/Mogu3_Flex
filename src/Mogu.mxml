@@ -3,7 +3,9 @@
                xmlns:s="library://ns.adobe.com/flex/spark"
                xmlns:mx="library://ns.adobe.com/flex/mx"
                preloader="uicontrol.LoadingExampleProgressBar"
-               creationComplete="init()"  minWidth="955" minHeight="600" skinClass="skins.ApplicationSkinBlue" xmlns:httpcontrol="httpcontrol.*" xmlns:control="control.*" xmlns:uicontrol="uicontrol.*">
+               creationComplete="init()" minWidth="955" minHeight="600" skinClass="skins.ApplicationSkinBlue"
+               xmlns:httpcontrol="httpcontrol.*"
+               xmlns:uicontrol="uicontrol.*">
     <fx:Style source="/assets/customrControls.css">
 
     </fx:Style>
@@ -28,7 +30,7 @@
             <s:BasicLayout/>
         </s:layout>
         <s:Image source="assets/logo.png" x="25" y="5" height="43"/>
-
+        <s:Label text="蘑菇" fontSize="25" y="10" x="75"></s:Label>
 
         <s:Group top="12" right="15" visible="false" id="userinfoGroup">
             <s:layout>

@@ -8,189 +8,204 @@
 	<fx:Script>
 		<![CDATA[
         import control.window.AddPlugin;
+        import control.window.AddRankPlugin;
+        import control.window.AddRoomPlugin;
         import control.window.UpdatePlugin;
 
         import events.ChangeUserEvent;
         import events.CloseEvent;
-			import events.PageChangeEvent;
+        import events.PageChangeEvent;
         import events.PluginEvent;
 
-        import httpcontrol.CHTTPService;
-			import httpcontrol.HttpServiceUtil;
-			
-			import mx.collections.ArrayCollection;
-			import mx.controls.Alert;
+        import httpcontrol.HttpServiceUtil;
+
+        import mx.collections.ArrayCollection;
+        import mx.controls.Alert;
         import mx.core.FlexGlobals;
         import mx.events.FlexEvent;
-			import mx.events.ItemClickEvent;
+        import mx.events.ItemClickEvent;
         import mx.managers.PopUpManager;
         import mx.rpc.events.FaultEvent;
-			import mx.rpc.events.ResultEvent;
-			
-			import util.ToolUtil;
-			
-			[Bindable]
-			private var list:ArrayCollection=new ArrayCollection();
-			[Bindable]
-			private var buttonArr1:ArrayCollection=new ArrayCollection();
-			
-			override public   function  init(e:FlexEvent):void{
-                changeCurrentUser(null);
-                pageing.addEventListener(PageChangeEvent.PageChange_EventStr,getApkList);
-			}
+        import mx.rpc.events.ResultEvent;
 
-            override public function changeCurrentUser(e:ChangeUserEvent):void{
-                buttonArr1.removeAll();
-                if(ToolUtil.sessionUser.auth=="admin"){
-                    pageing.enabled = true;
-                    buttonArr1.addAll(new ArrayCollection([
-                        {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
-                        {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
-                        {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
-                        {'label': '设置等级', 'ico': wximg, 'mode': 'setrank'},
-                        {'label': '设置房间列表', 'ico': wximg, 'mode': 'setroom'},
-                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
-                        {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
-                    ]));
-                }else{
-                    pageing.enabled = false;
-                    buttonArr1.addAll(new ArrayCollection([
-                        {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
-                        {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
-                        {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
-                        {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
-                        {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
-                    ]));
-                }
-                getApkList();
+        import util.ToolUtil;
+
+        [Bindable]
+        private var list:ArrayCollection = new ArrayCollection();
+        [Bindable]
+        private var buttonArr1:ArrayCollection = new ArrayCollection();
+
+        override public function init(e:FlexEvent):void {
+            changeCurrentUser(null);
+            pageing.addEventListener(PageChangeEvent.PageChange_EventStr, getApkList);
+        }
+
+        override public function changeCurrentUser(e:ChangeUserEvent):void {
+            buttonArr1.removeAll();
+            if (ToolUtil.sessionUser.auth == "admin") {
+                pageing.enabled = true;
+                buttonArr1.addAll(new ArrayCollection([
+                    {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
+                    {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
+                    {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
+                    {'label': '设置等级', 'ico': wximg, 'mode': 'setrank'},
+                    {'label': '设置房间列表', 'ico': wximg, 'mode': 'setroom'},
+                    {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
+                    {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
+                ]));
+            } else {
+                pageing.enabled = false;
+                buttonArr1.addAll(new ArrayCollection([
+                    {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
+                    {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
+                    {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
+                    {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
+                    {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
+                ]));
+            }
+            getApkList();
+        }
+
+        override public function closeContainer(e:CloseEvent):void {
+            dispatchEvent(e);
+
+        }
+
+        private function getDataResult(o:Object, e:ResultEvent):void {
+            if (o && o.success) {
+                list = new ArrayCollection(o.result as Array);
             }
 
-			override public function closeContainer(e:CloseEvent):void{
-				dispatchEvent(e);
-				
-			}
-			
-			private function getDataResult(o:Object,e:ResultEvent):void{
-				if(o&&o.success){
-					list = new ArrayCollection(o.result as Array);
-				}
-				
-			}
-			public function getApkList(e:Error=null):void{
-				var data:Object=getData();
+        }
 
-				HttpServiceUtil.getCHTTPServiceAndResult("/PluginList",getApkListResult,"get").send(data);
-			}
-			
-			private function getApkListResult(result:Object,e:ResultEvent):void{
-				if(list.length==0){
-                    pageing.RecordCount = result.result.count;
-                    pageing.mPageSize = 30;
-                    pageing.initPage();
-                }
-                if(pageing.RecordCount!=result.result.count){
-                    pageing.RecordCount = result.result.count;
-                }
+        public function getApkList(e:Error = null):void {
+            var data:Object = getData();
+
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "get").send(data);
+        }
+
+        private function getApkListResult(result:Object, e:ResultEvent):void {
+            if (list.length == 0) {
+                pageing.RecordCount = result.result.count;
+                pageing.mPageSize = 30;
+                pageing.initPage();
+            }
+            if (pageing.RecordCount != result.result.count) {
+                pageing.RecordCount = result.result.count;
+            }
+            list.removeAll();
+            list.addAll(new ArrayCollection(result.result.list as Array));
+
+        }
+
+
+        public function getData():Object {
+            var o:Object = {};
+            if (list.length > 0) {
+                o['page'] = pageing.PageIndex;
+            }
+            return o;
+        }
+
+        private function search():void {
+            var data:Object = new Object();
+//				data["key"] = key.text;
+            HttpServiceUtil.getCHTTPServiceAndResult("/ca/findUser", searchResult, "POST").send(data);
+
+        }
+
+        private function searchResult(result:Object, e:ResultEvent):void {
+            if (result.result) {
                 list.removeAll();
-                list.addAll(new ArrayCollection(result.result.list as Array));
+                list.addAll(new ArrayCollection(result.result as Array));
+            }
 
-			}
-			
-			
-			public function getData():Object{
-				var o:Object={};
-				if(list.length>0){
-                    o['page']=pageing.PageIndex;
-                }
-				return o;
-			}
+        }
 
-			private function search():void{
-				var data:Object=new Object();
-				data["key"] = key.text;
-				HttpServiceUtil.getCHTTPServiceAndResult("/ca/findUser",searchResult,"POST").send(data);
-				
-			}
-			private function searchResult(result:Object,e:ResultEvent):void{
-				if(result.result){
-					list.removeAll();
-					list.addAll(new ArrayCollection(result.result as Array));
-				}
-				
-			}
-			
-			private function loadDataFault(e:FaultEvent):void{
-				Alert.show('操作失败',"提示");
-			}
-			
-			
-			//新增，保存，删除的处理函数
-			private function clickHander(e:ItemClickEvent):void{
-				if(e.item.mode=="add"){
-					add();
-				}
-                if(e.item.mode=="update"){
-                    updatePlugin();
-                }
-                if(e.item.mode=="upload"){
-                    updateApkPlugin();
-                }
-                if(e.item.mode=="del"){
-                    deleteImage();
-                }
-                if(e.item.mode=="setrank"){
-                    add();
-                }
-                if(e.item.mode=="setroom"){
-                    add();
-                }
-                if(e.item.mode=="download"){
-                    if(!pluginGrid.selectedItem){
-                        Alert.show("请选择应用。")
-                        return;
-                    }
-                    var strUrl:URLRequest = new URLRequest("/serve/"+pluginGrid.selectedItem.apkkey);
-                    navigateToURL(strUrl);
-                }
+        private function loadDataFault(e:FaultEvent):void {
+            Alert.show('操作失败', "提示");
+        }
 
-			}
-			
-			public function add():void{
-                var p:AddPlugin=PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,AddPlugin,true) as AddPlugin;
-                p.addEventListener(PluginEvent.PluginChange,function(e:Event):void{
-                    getApkList();
-                });
-			}
-        public function updatePlugin():void{
-            if(!pluginGrid.selectedItem){
+
+        //新增，保存，删除的处理函数
+        private function clickHander(e:ItemClickEvent):void {
+            if (e.item.mode == "add") {
+                add();
+            }
+            if (e.item.mode == "update") {
+                updatePlugin();
+            }
+            if (e.item.mode == "upload") {
+                updateApkPlugin();
+            }
+            if (e.item.mode == "del") {
+                deleteImage();
+            }
+            if (e.item.mode == "setrank") {
+                if (!pluginGrid.selectedItem) {
+                    Alert.show("请选择应用", "提示");
+                    return;
+                }
+                var p:AddRankPlugin = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, AddRankPlugin, true) as AddRankPlugin;
+                p.plugin = pluginGrid.selectedItem;
+            }
+            if (e.item.mode == "setroom") {
+                if (!pluginGrid.selectedItem) {
+                    Alert.show("请选择应用", "提示");
+                    return;
+                }
+                var pr:AddRoomPlugin = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, AddRoomPlugin, true) as AddRoomPlugin;
+                pr.plugin = pluginGrid.selectedItem;
+            }
+            if (e.item.mode == "download") {
+                if (!pluginGrid.selectedItem) {
+                    Alert.show("请选择应用。")
+                    return;
+                }
+                var strUrl:URLRequest = new URLRequest("/serve/" + pluginGrid.selectedItem.apkkey);
+                navigateToURL(strUrl);
+            }
+
+        }
+
+        public function add():void {
+            var p:AddPlugin = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, AddPlugin, true) as AddPlugin;
+            p.addEventListener(PluginEvent.PluginChange, function (e:Event):void {
+                getApkList();
+            });
+        }
+
+        public function updatePlugin():void {
+            if (!pluginGrid.selectedItem) {
                 Alert.show("请选择应用。")
                 return;
             }
-            var p:AddPlugin=PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,AddPlugin,true) as AddPlugin;
+            var p:AddPlugin = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, AddPlugin, true) as AddPlugin;
             p.plugin = pluginGrid.selectedItem;
-            p.addEventListener(PluginEvent.PluginChange,function(e:Event):void{
+            p.addEventListener(PluginEvent.PluginChange, function (e:Event):void {
 
                 getApkList();
             });
         }
-        public function updateApkPlugin():void{
-            if(!pluginGrid.selectedItem){
+
+        public function updateApkPlugin():void {
+            if (!pluginGrid.selectedItem) {
                 Alert.show("请选择应用。")
                 return;
             }
-            var p:UpdatePlugin=PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject,UpdatePlugin,true) as UpdatePlugin;
+            var p:UpdatePlugin = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, UpdatePlugin, true) as UpdatePlugin;
             p.plugin = pluginGrid.selectedItem;
-            p.addEventListener(PluginEvent.PluginChange,function(e:Event):void{
+            p.addEventListener(PluginEvent.PluginChange, function (e:Event):void {
                 getApkList();
             });
         }
 
         private function deleteImage():void {
-            if(!pluginGrid.selectedItem){
+            if (!pluginGrid.selectedItem) {
                 Alert.show("请选择应用。")
                 return;
             }
-                Alert.show("确认删除应用 "+pluginGrid.selectedItem.name+" ?", "提示", Alert.YES | Alert.NO, null, deleteImg);
+            Alert.show("确认删除应用 " + pluginGrid.selectedItem.name + " ?", "提示", Alert.YES | Alert.NO, null, deleteImg);
         }
 
         //上传图片到服务器
@@ -199,90 +214,88 @@
                 del();
             }
         }
-			public function del():void{
-                if(!pluginGrid.selectedItem){
-                    Alert.show("请选择应用。")
-                    return;
-                }
 
-                var obj:Object = new Object();
-                obj.pluginid = pluginGrid.selectedItem.id;
-                HttpServiceUtil.getCHTTPServiceAndResult("/PluginDelete", function(result:Object,e:ResultEvent):void{
-                    getApkList();
-                },"get").send(obj);
-			}
-			
-			public function show(obj:Object):void{
-			}
-			
-			
-			
-			public function refresh(result:Object,e:ResultEvent):void{
-				if(result.success){
-					add();
-					init(null);
-					//					InfoUtil.userRefresh(refreshScx);
-				}
-			}
-			
-			private function isUsered(item:Object, column:GridColumn):String{
-				var str:String="";
-					if(item.isaction){
-						str="启用";
-					}else{
-						str="停止使用";
-					}
-				return str;
-			}
-			
-			
-			private function userType(item:Object, column:GridColumn):String{
-				var str:String="";
-					if(item.ismanager){
-						str="编辑者";
-					}
-					
-				return str;
-			}
-			private function pagechange(e:PageChangeEvent):void
-				
-			{
-				
-				getApkList();
-				
-			}
+        public function del():void {
+            if (!pluginGrid.selectedItem) {
+                Alert.show("请选择应用。")
+                return;
+            }
 
-        private function activefun(item:Object, column:GridColumn):String{
-            if(item.isactive){
+            var obj:Object = new Object();
+            obj.pluginid = pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/PluginDelete", function (result:Object, e:ResultEvent):void {
+                getApkList();
+            }, "get").send(obj);
+        }
+
+        public function show(obj:Object):void {
+        }
+
+
+        public function refresh(result:Object, e:ResultEvent):void {
+            if (result.success) {
+                add();
+                init(null);
+                //					InfoUtil.userRefresh(refreshScx);
+            }
+        }
+
+        private function isUsered(item:Object, column:GridColumn):String {
+            var str:String = "";
+            if (item.isaction) {
+                str = "启用";
+            } else {
+                str = "停止使用";
+            }
+            return str;
+        }
+
+
+        private function userType(item:Object, column:GridColumn):String {
+            var str:String = "";
+            if (item.ismanager) {
+                str = "编辑者";
+            }
+
+            return str;
+        }
+
+        private function pagechange(e:PageChangeEvent):void {
+
+            getApkList();
+
+        }
+
+        private function activefun(item:Object, column:GridColumn):String {
+            if (item.isactive) {
                 return "正常";
-            }else{
+            } else {
                 return item.status;
             }
         }
-        private function typefun(item:Object, column:GridColumn):String{
-            if(item.type=="0"){
+
+        private function typefun(item:Object, column:GridColumn):String {
+            if (item.type == "0") {
                 return "单机";
             }
-            if(item.type=="1"){
+            if (item.type == "1") {
                 return "积分";
             }
-            if(item.type=="2"){
+            if (item.type == "2") {
                 return "多人游戏";
             }
             return "";
         }
 
-        private function kindfun(item:Object, column:GridColumn):String{
-            for each(var obj:Object in ToolUtil.allkindlist){
-                if(obj.id == item.kindids[0]){
+        private function kindfun(item:Object, column:GridColumn):String {
+            for each(var obj:Object in ToolUtil.allkindlist) {
+                if (obj.id == item.kindids[0]) {
                     return obj.name;
                 }
             }
             return "";
         }
-
-
-		]]>
+        ]]>
 	</fx:Script>
 	<fx:Declarations>
 		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
@@ -306,13 +319,13 @@
                 <mx:ButtonBar id="ba1" dataProvider="{buttonArr1}" doubleClickEnabled="true"  chromeColor="#faf0cc"  labelField="label" iconField="ico"  height="30"  itemClick="clickHander(event)" >
                 </mx:ButtonBar>
                 <s:Spacer width="20"></s:Spacer>
-				<s:Label text="查找：" />
-				<s:TextInput width="100" id="key" />
-				<s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="search()" />
+				<!--<s:Label text="查找：" />-->
+				<!--<s:TextInput width="100" id="key" />-->
+				<!--<s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="search()" />-->
 
 
 			</s:BorderContainer>
-            <s:DataGrid id="pluginGrid" width="100%" height="100%" rowHeight="30" dataProvider="{list}">
+            <s:DataGrid id="pluginGrid" width="100%" height="100%" rowHeight="35" dataProvider="{list}">
                 <s:columns>
                     <s:ArrayList>
                         <s:GridColumn dataField="name" headerText="应用名称" width="150">
@@ -341,6 +354,8 @@
                         <s:GridColumn dataField="type" labelFunction="typefun" headerText="应用类型">
                         </s:GridColumn>
                         <s:GridColumn dataField="kindid" labelFunction="kindfun"  headerText="应用分类">
+                        </s:GridColumn>
+                        <s:GridColumn dataField="downnum" headerText="下载量">
                         </s:GridColumn>
                         <s:GridColumn dataField="username" headerText="作者">
                         </s:GridColumn>

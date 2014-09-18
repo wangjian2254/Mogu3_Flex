@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                   xmlns:s="library://ns.adobe.com/flex/spark"
+                   xmlns:mx="library://ns.adobe.com/flex/mx" width="700" height="700" borderVisible="false"
+                   backgroundAlpha="0" xmlns:uicontrol="uicontrol.*" creationComplete="init()">
+    <fx:Script>
+		<![CDATA[
+        import control.CBorderContainer;
+
+        import events.AutoGridEvent;
+
+        import httpcontrol.HttpServiceUtil;
+
+        import mx.collections.ArrayCollection;
+        import mx.controls.Alert;
+        import mx.events.ItemClickEvent;
+        import mx.rpc.events.ResultEvent;
+
+        import util.ToolUtil;
+
+        [Bindable]
+        public var plugin:Object = new Object();
+
+        [Bindable]
+        private var ranklist:ArrayCollection = new ArrayCollection();
+        [Bindable]
+        private var btnlist:ArrayCollection = new ArrayCollection([
+            {label: "保存", icon: CBorderContainer.saveimg, mod: "save"}
+        ]);
+
+        public function init():void {
+            if (!plugin.hasOwnProperty("id")) {
+                ranklist.removeAll();
+                return;
+            }
+            selectedApp();
+        }
+
+
+        private function save():void {
+            if (!plugin.hasOwnProperty("id")) {
+                Alert.show("请选择应用")
+                return;
+            }
+            var obj:Object = new Object();
+            obj['appcode'] = plugin.appcode;
+            obj['id'] = plugin.id;
+            obj['num'] = ranklist.length;
+            var i:int = 0;
+            for each(var item:Object in ranklist) {
+                if (!item.point || !item.rank) {
+                    continue;
+                }
+                obj['point' + i] = item.point;
+                obj['rank' + i] = item.rank;
+                i++;
+            }
+            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RankCreate", function (result:Object, e:ResultEvent):void {
+                selectedApp();
+            }, "POST").send(obj);
+        }
+
+
+        private function btnHandler(e:ItemClickEvent):void {
+            switch (e.item.mod) {
+                case "add":
+                    ranklist.addItem(new Object());
+                    break;
+                case "save":
+                    save();
+                    break;
+            }
+        }
+
+
+        private function selectedApp():void {
+            if (!plugin.hasOwnProperty("id")) {
+                return;
+            }
+            var data:Object = new Object();
+            data['appcode'] = plugin.appcode;;
+            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RankCreate", function (result:Object, e:ResultEvent):void {
+                if (result.result.appcode == plugin.appcode) {
+                    ranklist = new ArrayCollection(result.result.rlist as Array);
+                }
+            }, "get").send(data);
+        }
+
+
+        protected function optionGrid_optionHandler(event:AutoGridEvent):void {
+            var data:Object = event.data;
+            if (event.type == AutoGridEvent.DELETE) {
+                var dataProvider:ArrayCollection = optionGrid.dataProvider as ArrayCollection;
+                dataProvider.removeItemAt(data.rowIndex);
+            }
+        }
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout gap="0" >
+			
+		</s:VerticalLayout>
+	</s:layout>
+
+            <s:VGroup width="100%" height="100%">
+                <s:BorderContainer width="100%" height="45" borderVisible="false" backgroundImage="{CBorderContainer.toolbgimg}">
+                    <s:layout>
+                        <s:HorizontalLayout verticalAlign="middle" paddingLeft="20"></s:HorizontalLayout>
+                    </s:layout>
+                    <mx:ButtonBar id="showModel" itemClick="btnHandler(event)" dataProvider="{btnlist}" height="30" chromeColor="#faf0cc"   labelField="label" />
+                </s:BorderContainer>
+                <uicontrol:AutoGrid editable="true" width="100%" id="optionGrid" dataProvider="{ranklist}" height="100%" autoDelete="optionGrid_optionHandler(event)"  sortableColumns="false">
+                    <uicontrol:columns>
+                        <mx:DataGridColumn headerText="积分值" dataField="point" textAlign="left">
+                        </mx:DataGridColumn>
+                        <mx:DataGridColumn headerText="等级名" dataField="rank" >
+                        </mx:DataGridColumn>
+                    </uicontrol:columns>
+                </uicontrol:AutoGrid>
+            </s:VGroup>
+</s:BorderContainer>

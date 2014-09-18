@@ -2,12 +2,11 @@
 <control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
                           xmlns:s="library://ns.adobe.com/flex/spark"
                           xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*"
-                          xmlns:uicontrol="uicontrol.*" xmlns:fc="http://www.adobe.com/2006/fc"
                           xmlns:conobj="uicontrol.conobj.*"
 
-                          width="700" height="500"  backgroundAlpha="0">
-	
-	<fx:Script>
+                          width="700" height="500" backgroundAlpha="0">
+
+    <fx:Script>
 		<![CDATA[
         import events.ChangeDepartmentEvent;
         import events.CloseEvent;
@@ -16,14 +15,11 @@
 
         import mx.collections.ArrayCollection;
         import mx.controls.Alert;
-        import mx.core.FlexGlobals;
         import mx.events.CollectionEvent;
         import mx.events.FlexEvent;
         import mx.events.FlexMouseEvent;
         import mx.rpc.events.ResultEvent;
         import mx.utils.ObjectUtil;
-
-        import org.osmf.events.TimeEvent;
 
         import spark.core.IViewport;
 
@@ -36,7 +32,8 @@
 
 
         [Bindable]
-        private var departmentList:ArrayCollection = null;[Bindable]
+        private var departmentList:ArrayCollection = null;
+        [Bindable]
         private var departmentList2:ArrayCollection = null;
 
         private var departChart:Object = null;
@@ -71,8 +68,8 @@
         private function initDepartment():void {
             departmentList = ObjectUtil.copy(ToolUtil.departMentList) as ArrayCollection;
             departmentList2 = ObjectUtil.copy(ToolUtil.departMentList) as ArrayCollection;
-            for each(var d:Object in departmentList2){
-                if(d.flag == 'free'){
+            for each(var d:Object in departmentList2) {
+                if (d.flag == 'free') {
                     departmentList2.removeItemAt(departmentList2.getItemIndex(d));
                     break;
                 }
@@ -91,7 +88,7 @@
                     rootDepart = depart;
                 }
             }
-            for ( i = 0; i < departmentList.length; i++) {
+            for (i = 0; i < departmentList.length; i++) {
 
                 depart = departmentList.getItemAt(i);
                 departitem = new DepartmentItem();
@@ -276,20 +273,20 @@
             departmentName.text = e.depart.name;
             departmentName.enabled = departmentSelectArray.getById(selectDepartmentId).powerAdd;
             orgHead.buttonMode = departmentSelectArray.getById(selectDepartmentId).powerAdd;
-            if(orgHead.buttonMode){
+            if (orgHead.buttonMode) {
                 orgHead.toolTip = "点击修改部门头像";
-            }else{
+            } else {
                 orgHead.toolTip = "您没有权限修改部门头像";
             }
             memberBox.enabled = departmentSelectArray.getById(selectDepartmentId).powerAdd;
-            if(e.depart.flag != 'free'&& e.depart.flag != 'root'&& ToolUtil.org.managers.indexOf(ToolUtil.sessionUser.pid) >= 0){
+            if (e.depart.flag != 'free' && e.depart.flag != 'root' && ToolUtil.org.managers.indexOf(ToolUtil.sessionUser.pid) >= 0) {
                 departBox.enabled = true;
-            }else{
+            } else {
                 departBox.enabled = false;
             }
-            departBox.selectedIndex=-1;
-            for each(var d:Object in departBox.dataProvider){
-                if(d.id == e.depart.father){
+            departBox.selectedIndex = -1;
+            for each(var d:Object in departBox.dataProvider) {
+                if (d.id == e.depart.father) {
                     departBox.selectedItem = d;
                 }
             }
@@ -320,8 +317,8 @@
 
         }
 
-        private function showHeadPanel():void{
-            Alert.show("修改头像","提示");
+        private function showHeadPanel():void {
+            Alert.show("修改头像", "提示");
         }
 
         private var selectDepartmentId:* = null;
@@ -342,7 +339,7 @@
         }
 
         private function addMember():void {
-            if(memberBox.selectedItem==null){
+            if (memberBox.selectedItem == null) {
                 return;
             }
             var obj:Object = new Object();
@@ -359,8 +356,9 @@
                 ToolUtil.departMentListRefresh();
             }
         }
+
         private function changeFatherDepartment():void {
-            if(departBox.selectedItem==null){
+            if (departBox.selectedItem == null) {
                 return;
             }
             var obj:Object = new Object();

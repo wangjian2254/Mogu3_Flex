@@ -2,26 +2,23 @@ import control.ApkControl;
 import control.KindAppControl;
 import control.KindControl;
 import control.NoticeControl;
+import control.RankAppControl;
+import control.RoomAppControl;
 import control.WebUrlControl;
 
 import events.ChangeMenuEvent;
-
 
 import flash.events.Event;
 import flash.events.MouseEvent;
 
 import mx.controls.Alert;
 import mx.controls.Menu;
-import mx.core.FlexGlobals;
 import mx.events.FlexEvent;
 import mx.events.MenuEvent;
-import mx.managers.PopUpManager;
 import mx.rpc.events.FaultEvent;
 import mx.rpc.events.ResultEvent;
 
-
 import uicontrol.MenuButton;
-
 
 public function failMenu(evt:FaultEvent):void {
 	Alert.show("获取用户菜单失败。", "提示");
@@ -195,6 +192,12 @@ protected function onMenuChange(event:MenuEvent, obj:Object = null):void {
                 break;
             case 'appkind':
                 c = new KindAppControl();
+                break;
+            case 'gamelist':
+                c = new RankAppControl();
+                break;
+            case 'roomlist':
+                c = new RoomAppControl();
                 break;
 //			case 'group':
 //				c = new DepartmentControl();

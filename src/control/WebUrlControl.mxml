@@ -1,141 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
-						  xmlns:s="library://ns.adobe.com/flex/spark" 
-						  xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*" 
-						  xmlns:uicontrol="uicontrol.*"
-						  width="700" height="500" borderVisible="false" backgroundAlpha="0">
-	
-	<fx:Script>
-		<![CDATA[
-        import control.window.AddPlugin;
-        import control.window.UpdatePlugin;
+<control:CBorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:control="control.*"
+                          width="700" height="500" borderVisible="false" backgroundAlpha="0">
 
+    <fx:Script>
+		<![CDATA[
         import events.ChangeUserEvent;
         import events.CloseEvent;
-			import events.PageChangeEvent;
-        import events.PluginEvent;
+        import events.PageChangeEvent;
 
-        import httpcontrol.CHTTPService;
-			import httpcontrol.HttpServiceUtil;
-			
-			import mx.collections.ArrayCollection;
-			import mx.controls.Alert;
-        import mx.core.FlexGlobals;
+        import httpcontrol.HttpServiceUtil;
+
+        import mx.collections.ArrayCollection;
+        import mx.controls.Alert;
         import mx.events.FlexEvent;
-			import mx.events.ItemClickEvent;
-        import mx.managers.PopUpManager;
-        import mx.rpc.events.FaultEvent;
-			import mx.rpc.events.ResultEvent;
-			
-			import util.ToolUtil;
-			
-			[Bindable]
-			private var list:ArrayCollection=new ArrayCollection();
-			[Bindable]
-			private var buttonArr1:ArrayCollection=new ArrayCollection();
-			
-			override public   function  init(e:FlexEvent):void{
-                changeCurrentUser(null);
-			}
+        import mx.events.ItemClickEvent;
+        import mx.rpc.events.ResultEvent;
 
-            override public function changeCurrentUser(e:ChangeUserEvent):void{
-                buttonArr1.removeAll();
-                if(ToolUtil.sessionUser.auth=="admin"){
-                    buttonArr1.addAll(new ArrayCollection([
-                        {'label': '添加新网址', 'ico': addimg, 'mode': 'add'}
-                    ]));
-                }else{
-                    buttonArr1.addAll(new ArrayCollection([
+        import util.ToolUtil;
 
-                    ]));
-                }
-                getApkList();
+        [Bindable]
+        private var list:ArrayCollection = new ArrayCollection();
+        [Bindable]
+        private var buttonArr1:ArrayCollection = new ArrayCollection();
+
+        override public function init(e:FlexEvent):void {
+            changeCurrentUser(null);
+        }
+
+        override public function changeCurrentUser(e:ChangeUserEvent):void {
+            buttonArr1.removeAll();
+            if (ToolUtil.sessionUser.auth == "admin") {
+                buttonArr1.addAll(new ArrayCollection([
+                    {'label': '添加新网址', 'ico': addimg, 'mode': 'add'}
+                ]));
+            } else {
+                buttonArr1.addAll(new ArrayCollection([
+
+                ]));
+            }
+            getApkList();
+        }
+
+        override public function closeContainer(e:CloseEvent):void {
+            dispatchEvent(e);
+
+        }
+
+        private function getDataResult(o:Object, e:ResultEvent):void {
+            if (o && o.success) {
+                list = new ArrayCollection(o.result as Array);
             }
 
-			override public function closeContainer(e:CloseEvent):void{
-				dispatchEvent(e);
-				
-			}
-			
-			private function getDataResult(o:Object,e:ResultEvent):void{
-				if(o&&o.success){
-					list = new ArrayCollection(o.result as Array);
-				}
-				
-			}
-			public function getApkList(e:Error=null):void{
-				var data:Object=getData();
+        }
 
-				HttpServiceUtil.getCHTTPServiceAndResult("/WebsiteList",getApkListResult,"get").send(data);
-			}
-			
-			private function getApkListResult(result:Object, e:ResultEvent):void{
+        public function getApkList(e:Error = null):void {
+            var data:Object = getData();
 
-                list.removeAll();
-                list.addAll(new ArrayCollection(result.result as Array));
+            HttpServiceUtil.getCHTTPServiceAndResult("/WebsiteList", getApkListResult, "get").send(data);
+        }
 
-			}
-			
-			
-			public function getData():Object{
-				var o:Object={};
+        private function getApkListResult(result:Object, e:ResultEvent):void {
 
-				return o;
-			}
+            list.removeAll();
+            list.addAll(new ArrayCollection(result.result as Array));
 
-			//新增，保存，删除的处理函数
-			private function clickHander(e:ItemClickEvent):void{
-				if(e.item.mode=="add"){
-					add();
-				}
-                if(e.item.mode=="update"){
-                    updatePlugin();
-                }
-
-                if(e.item.mode=="del"){
-                    deleteImage();
-                }
+        }
 
 
-			}
-			
-			public function add():void{
-                weburl = new Object();
-                urlInput.text = "";
-			}
-        public function updatePlugin():void{
-            if(!pluginGrid.selectedItem){
+        public function getData():Object {
+            var o:Object = {};
+
+            return o;
+        }
+
+        //新增，保存，删除的处理函数
+        private function clickHander(e:ItemClickEvent):void {
+            if (e.item.mode == "add") {
+                add();
+            }
+            if (e.item.mode == "update") {
+                updatePlugin();
+            }
+
+            if (e.item.mode == "del") {
+                deleteImage();
+            }
+
+
+        }
+
+        public function add():void {
+            weburl = new Object();
+            urlInput.text = "";
+        }
+
+        public function updatePlugin():void {
+            if (!pluginGrid.selectedItem) {
                 Alert.show("请选择应用。")
                 return;
             }
 
         }
 
-        private function selectWebUrl():void{
-            if(!pluginGrid.selectedItem){
+        private function selectWebUrl():void {
+            if (!pluginGrid.selectedItem) {
                 return;
             }
             weburl = pluginGrid.selectedItem;
             urlInput.text = weburl.url;
         }
-        private var weburl:Object=new Object();
-        private function save():void{
+
+        private var weburl:Object = new Object();
+
+        private function save():void {
             var obj:Object = new Object();
-            if(weburl.hasOwnProperty("id")){
-                obj.id=weburl.id;
+            if (weburl.hasOwnProperty("id")) {
+                obj.id = weburl.id;
             }
             obj.url = urlInput.text;
-            HttpServiceUtil.getCHTTPServiceAndResult("/WebsiteUpdate", function(result:Object,e:ResultEvent):void{
+            HttpServiceUtil.getCHTTPServiceAndResult("/WebsiteUpdate", function (result:Object, e:ResultEvent):void {
                 getApkList();
-            },"post").send(obj);
+            }, "post").send(obj);
         }
 
         private function deleteImage():void {
-            if(!pluginGrid.selectedItem){
+            if (!pluginGrid.selectedItem) {
                 Alert.show("请选择网址。")
                 return;
             }
-                Alert.show("确认删除网址 "+pluginGrid.selectedItem.url+" ?", "提示", Alert.YES | Alert.NO, null, deleteImg);
+            Alert.show("确认删除网址 " + pluginGrid.selectedItem.url + " ?", "提示", Alert.YES | Alert.NO, null, deleteImg);
         }
 
         //上传图片到服务器
@@ -144,91 +139,89 @@
                 del();
             }
         }
-			public function del():void{
-                if(!pluginGrid.selectedItem){
-                    Alert.show("请选择网址。")
-                    return;
-                }
 
-                var obj:Object = new Object();
-                obj.id = pluginGrid.selectedItem.id;
-                HttpServiceUtil.getCHTTPServiceAndResult("/WebsiteDelete", function(result:Object,e:ResultEvent):void{
-                    getApkList();
-                    add();
-                },"get").send(obj);
-			}
-			
-			public function show(obj:Object):void{
-			}
-			
-			
-			
-			public function refresh(result:Object,e:ResultEvent):void{
-				if(result.success){
-					add();
-					init(null);
-					//					InfoUtil.userRefresh(refreshScx);
-				}
-			}
-			
-			private function isUsered(item:Object, column:GridColumn):String{
-				var str:String="";
-					if(item.isaction){
-						str="启用";
-					}else{
-						str="停止使用";
-					}
-				return str;
-			}
-			
-			
-			private function userType(item:Object, column:GridColumn):String{
-				var str:String="";
-					if(item.ismanager){
-						str="编辑者";
-					}
-					
-				return str;
-			}
-			private function pagechange(e:PageChangeEvent):void
-				
-			{
-				
-				getApkList();
-				
-			}
+        public function del():void {
+            if (!pluginGrid.selectedItem) {
+                Alert.show("请选择网址。")
+                return;
+            }
 
-        private function activefun(item:Object, column:GridColumn):String{
-            if(item.isactive){
+            var obj:Object = new Object();
+            obj.id = pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/WebsiteDelete", function (result:Object, e:ResultEvent):void {
+                getApkList();
+                add();
+            }, "get").send(obj);
+        }
+
+        public function show(obj:Object):void {
+        }
+
+
+        public function refresh(result:Object, e:ResultEvent):void {
+            if (result.success) {
+                add();
+                init(null);
+                //					InfoUtil.userRefresh(refreshScx);
+            }
+        }
+
+        private function isUsered(item:Object, column:GridColumn):String {
+            var str:String = "";
+            if (item.isaction) {
+                str = "启用";
+            } else {
+                str = "停止使用";
+            }
+            return str;
+        }
+
+
+        private function userType(item:Object, column:GridColumn):String {
+            var str:String = "";
+            if (item.ismanager) {
+                str = "编辑者";
+            }
+
+            return str;
+        }
+
+        private function pagechange(e:PageChangeEvent):void {
+
+            getApkList();
+
+        }
+
+        private function activefun(item:Object, column:GridColumn):String {
+            if (item.isactive) {
                 return "正常";
-            }else{
+            } else {
                 return item.status;
             }
         }
-        private function typefun(item:Object, column:GridColumn):String{
-            if(item.type=="0"){
+
+        private function typefun(item:Object, column:GridColumn):String {
+            if (item.type == "0") {
                 return "单机";
             }
-            if(item.type=="1"){
+            if (item.type == "1") {
                 return "积分";
             }
-            if(item.type=="2"){
+            if (item.type == "2") {
                 return "多人游戏";
             }
             return "";
         }
 
-        private function kindfun(item:Object, column:GridColumn):String{
-            for each(var obj:Object in ToolUtil.allkindlist){
-                if(obj.id == item.kindids[0]){
+        private function kindfun(item:Object, column:GridColumn):String {
+            for each(var obj:Object in ToolUtil.allkindlist) {
+                if (obj.id == item.kindids[0]) {
                     return obj.name;
                 }
             }
             return "";
         }
-
-
-		]]>
+        ]]>
 	</fx:Script>
 	<fx:Declarations>
 		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
