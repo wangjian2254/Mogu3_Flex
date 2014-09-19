@@ -37,7 +37,7 @@
 
         override public function init(e:FlexEvent):void {
             changeCurrentUser(null);
-            pageing.addEventListener(PageChangeEvent.PageChange_EventStr, getApkList);
+            pageing.addEventListener(PageChangeEvent.PageChange_EventStr, pagechange);
         }
 
         override public function changeCurrentUser(e:ChangeUserEvent):void {
@@ -78,7 +78,7 @@
 
         }
 
-        public function getApkList(e:Error = null):void {
+        public function getApkList():void {
             var data:Object = getData();
 
             HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "get").send(data);
@@ -86,13 +86,11 @@
 
         private function getApkListResult(result:Object, e:ResultEvent):void {
             if (list.length == 0) {
-                pageing.RecordCount = result.result.count;
                 pageing.mPageSize = 30;
+                pageing.RecordCount = result.result.count;
                 pageing.initPage();
             }
-            if (pageing.RecordCount != result.result.count) {
-                pageing.RecordCount = result.result.count;
-            }
+
             list.removeAll();
             list.addAll(new ArrayCollection(result.result.list as Array));
 
