@@ -43,7 +43,7 @@
             obj.username = username.text;
             obj.password = password.text;
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/login", refresh, "POST").send(obj);
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/login", refresh, "POST").send(obj);
 
 
         }

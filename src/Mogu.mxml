@@ -44,8 +44,8 @@
                 </s:layout>
 
                 <mx:LinkButton x="0" y="2" height="25" label="退出"  styleName="textStyle1" click="logout()"/>
-                <!--<s:Label text="|" styleName="textStyle1"/>-->
-                <!--<mx:LinkButton x="0" y="2" height="25" label="修改密码" styleName="textStyle1" click="repassword()"/>-->
+                <s:Label text="|" styleName="textStyle1"/>
+                <mx:LinkButton x="0" y="2" height="25" label="修改密码" styleName="textStyle1" click="repassword()"/>
                 <!--<s:Label text="|" styleName="textStyle1"/>-->
                 <!--<mx:LinkButton x="0" y="2" height="25" label="个人信息" styleName="textStyle1" click="updateinfo()"/>-->
 

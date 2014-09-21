@@ -134,7 +134,7 @@
 //				obj.icon = orgHeadSelectArray.selectedIcon();
 
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/regUser", refresh, "POST").send(obj);
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/regUser", refresh, "POST").send(obj);
 
 
         }

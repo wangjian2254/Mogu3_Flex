@@ -92,6 +92,14 @@
         //选择文件动作监听
         private function fileReferenceSelectHandler_apk(e:Event):void {
             apkImage.visible = true;
+            file_apk.addEventListener(Event.COMPLETE,function(event:Event):void{
+                tjButton.enabled = true;
+                tjButton.setStyle("color",0xffffff);
+                tjButton.label = "提交";
+            });
+            tjButton.enabled = false;
+            tjButton.setStyle("color",0x000000);
+            tjButton.label = "正在加载";
             file_apk.load();
         }
 
@@ -184,7 +192,7 @@
                 <s:layout>
                     <s:HorizontalLayout gap="10"/>
                 </s:layout>
-                <s:Button label="提交" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
+                <s:Button label="提交" id="tjButton" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
                 </s:Button>
                 <s:Button label="放弃" click="closeWin()" chromeColor="#ffffff" color="#000000" height="25">
                 </s:Button>

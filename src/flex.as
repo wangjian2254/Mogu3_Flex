@@ -15,7 +15,7 @@ public function quite(e:*=null):void {
 }
 
 public function quiteNoTip():void{
-    HttpServiceUtil.getCHTTPServiceAndResult("/logout", currentUser, "POST").send();
+    HttpServiceUtil.getCHTTPServiceAndResult("/mogu/logout", currentUser, "POST").send();
 }
 
 public function CloseWindow(event:CloseEvent):void{
