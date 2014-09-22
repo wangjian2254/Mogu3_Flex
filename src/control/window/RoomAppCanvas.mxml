@@ -42,10 +42,9 @@
                 return;
             }
             var obj:Object = new Object();
-            obj['appcode'] = plugin.appcode;
-            obj['id'] = plugin.id;
+            obj['pluginid'] = plugin.id;
             obj['num'] = numericStepper.value;
-            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RoomCreate", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/RoomCreate", function (result:Object, e:ResultEvent):void {
                 selectedApp();
             }, "POST").send(obj);
         }
@@ -68,8 +67,8 @@
             }
             var data:Object = new Object();
             data['appcode'] = plugin.appcode;
-            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RoomCreate", function (result:Object, e:ResultEvent):void {
-                if (result.result.appcode == plugin.appcode) {
+            HttpServiceUtil.getCHTTPServiceAndResult("/RoomDetail", function (result:Object, e:ResultEvent):void {
+                if (result.result.id == plugin.id) {
                     numericStepper.value = result.result.roomnum;
                     if (result.result.roomnum == 0) {
                         roomBz.visible = true;

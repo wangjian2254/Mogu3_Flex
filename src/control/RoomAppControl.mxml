@@ -68,20 +68,13 @@
 
         public function getApkList(e:Error = null):void {
 
-            HttpServiceUtil.getCHTTPServiceAndResult(ToolUtil.sessionUser.rankurl + "/RoomPluginList", function (result:Object, e:ResultEvent):void {
-                var data:Object = new Object();
-                data['pluginids'] = result.result;
-                if (!data.pluginids) {
-                    data.pluginids = "";
-                }
-                HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "POST").send(data);
-            }, "get").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/RoomPluginList", getApkListResult, "get").send();
         }
 
         private function getApkListResult(result:Object, e:ResultEvent):void {
 
             list.removeAll();
-            list.addAll(new ArrayCollection(result.result.list as Array));
+            list.addAll(new ArrayCollection(result.result as Array));
 
         }
 

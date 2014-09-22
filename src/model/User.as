@@ -8,7 +8,6 @@ package model
 
         private var _auth:String;
 
-        private var _rankurl:String;
 
 		
 		public function User()
@@ -50,12 +49,5 @@ package model
             _auth = value;
         }
 
-        public function get rankurl():String {
-            return _rankurl;
-        }
-
-        public function set rankurl(value:String):void {
-            _rankurl = value;
-        }
     }
 }

@@ -107,7 +107,6 @@ public class ToolUtil
             sessionUser.uid = result.result.uid;
             sessionUser.auth = result.result.auth;
             if(sessionUser.auth == 'admin'){
-                sessionUser.rankurl = result.result.rankurl;
                 pluginRefresh();
             }
 //            sessionUser=u;
