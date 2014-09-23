@@ -81,7 +81,7 @@
         public function getApkList():void {
             var data:Object = getData();
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "get").send(data);
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginList", getApkListResult, "get").send(data);
         }
 
         private function getApkListResult(result:Object, e:ResultEvent):void {
@@ -160,7 +160,7 @@
                     Alert.show("请选择应用。")
                     return;
                 }
-                var strUrl:URLRequest = new URLRequest("/serve/" + pluginGrid.selectedItem.apkkey);
+                var strUrl:URLRequest = new URLRequest(pluginGrid.selectedItem.apkkey);
                 navigateToURL(strUrl);
             }
 
@@ -221,7 +221,7 @@
 
             var obj:Object = new Object();
             obj.pluginid = pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginDelete", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginDelete", function (result:Object, e:ResultEvent):void {
                 getApkList();
             }, "get").send(obj);
         }
@@ -333,7 +333,7 @@
                                 <fx:Component>
                                     <s:GridItemRenderer>
                                         <s:HGroup width="100%" height="100%" verticalAlign="middle" gap="5" paddingLeft="5" paddingTop="3" paddingRight="3">
-                                            <s:Image source="/download/{data.imageid}" height="30" width="30"></s:Image>
+                                            <s:Image source="{data.imageid}" height="30" width="30"></s:Image>
                                         </s:HGroup>
                                     </s:GridItemRenderer>
                                 </fx:Component>

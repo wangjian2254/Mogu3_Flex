@@ -52,7 +52,7 @@
                 for each(var item:Object in notice.noticeconten) {
                     if (item.type == "img") {
                         var img:Image = new Image();
-                        img.source = "/download/" + item.imgid;
+                        img.source = item.imgid;
                         img.doubleClickEnabled = true;
                         img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                         imgGroup.addElement(img);
@@ -94,7 +94,7 @@
             if (typeButtonGroup.selectedValue == 2) {
                 obj.plugin = appDownList.selectedItem.id;
             }
-            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeUpdate", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/NoticeUpdate", function (result:Object, e:ResultEvent):void {
                 notice = result.result;
                 dispatchEvent(new PluginEvent());
                 init();
@@ -107,17 +107,11 @@
                 var obj:Object = new Object();
                 obj.id = notice.id;
                 obj.content = desc.text;
-                HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendContent", function (result:Object, e:ResultEvent):void {
+                HttpServiceUtil.getCHTTPServiceAndResult("/mogu/NoticeAppendContent", function (result:Object, e:ResultEvent):void {
                     desc.text = "";
                     notice = result.result;
                     if (file.data) {
-                        var obj:Object = new Object();
-                        obj.id = notice.id;
-                        HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function (result:Object, e:ResultEvent):void {
-                            if (file.data) {
-                                proceedWithUpload(result.result);
-                            }
-                        }, "get").send(obj);
+                        proceedWithUpload("/mogu/NoticeAppendImage?id="+notice.id);
                     } else {
                         init();
                     }
@@ -125,13 +119,7 @@
                 }, "POST").send(obj);
             } else {
                 if (file.data) {
-                    var obj:Object = new Object();
-                    obj.id = notice.id;
-                    HttpServiceUtil.getCHTTPServiceAndResult("/NoticeAppendImage", function (result:Object, e:ResultEvent):void {
-                        if (file.data) {
-                            proceedWithUpload(result.result);
-                        }
-                    }, "get").send(obj);
+                    proceedWithUpload("/mogu/NoticeAppendImage?id="+notice.id);
                 }
             }
 
@@ -275,7 +263,7 @@
                 var data:Object = new Object();
                 data["contentIndex"] = contentIndex;
                 data["id"] = notice.id;
-                HttpServiceUtil.getCHTTPServiceAndResult("/DeleteContentNotice", delImageResult, "get").send(data);
+                HttpServiceUtil.getCHTTPServiceAndResult("/mogu/DeleteContentNotice", delImageResult, "get").send(data);
             }
         }
 

@@ -44,6 +44,7 @@ public class ToolUtil
 
 
     public static var kindTypeList:ArrayCollection=new ArrayCollection([{id:'0',label:"管理员专用"},{id:'1',label:"第三方可用"}]);
+    public static var rankModelList:ArrayCollection=new ArrayCollection([{id:'normal',label:"积分不清空"},{id:'daily',label:"日刷新"},{id:'weekly',label:"周刷新"},{id:'monthly',label:"月刷新"},{id:'year',label:"年刷新"}]);
 
 
 
@@ -86,10 +87,10 @@ public class ToolUtil
     public static function sessionUserRefresh(fun:Function=null):void{
 //			RemoteUtil.getOperationAndResult("getAllUser",resultAllUser).send();
         if(fun==null){
-            HttpServiceUtil.getCHTTPServiceAndResult("/currentUser",resultFinduser,"POST").send()
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/currentUser",resultFinduser,"POST").send()
 //				RemoteUtil.getOperationAndResult("",resultAllUser,false).send();
         }else{
-            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResultAndFault("/currentUser",resultFinduser,failueFinduser,"POST");
+            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResultAndFault("/mogu/currentUser",resultFinduser,failueFinduser,"POST");
 
             http.resultFunArr.addItem(fun);
             http.send();
@@ -150,9 +151,9 @@ public class ToolUtil
     public static function kindListRefresh(fun:Function=null):void{
 
         if(fun==null){
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindList", resultGetKindlist,"POST").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/KindList", resultGetKindlist,"POST").send();
         }else{
-            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/KindList", resultGetKindlist,"POST");
+            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/mogu/KindList", resultGetKindlist,"POST");
             http.resultFunArr.addItem(fun);
             http.send();
 
@@ -368,9 +369,9 @@ public class ToolUtil
     public static function pluginRefresh(fun:*=null,e:*=null):void{
 
         if(!(fun is Function)){
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginNameList",resultAllPlugin,"POST").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginNameList",resultAllPlugin,"POST").send();
         }else{
-            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/PluginNameList",resultAllPlugin,"POST");
+            var http:CHTTPService=HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginNameList",resultAllPlugin,"POST");
             http.resultFunArr.addItem(fun);
             http.send();
 

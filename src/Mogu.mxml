@@ -21,7 +21,7 @@
 
     </fx:Script>
     <fx:Declarations>
-        <httpcontrol:CHTTPService id="menuXML" url="{CHTTPService.baseUrl}/menu.xml" method="GET" resultFormat="xml" result="setMenu(event)" fault="failMenu(event)"/>
+        <httpcontrol:CHTTPService id="menuXML" url="{CHTTPService.baseUrl}/mogu/menu.xml" method="GET" resultFormat="xml" result="setMenu(event)" fault="failMenu(event)"/>
 
     </fx:Declarations>
     <fx:Style source="/assets/style.css"/>

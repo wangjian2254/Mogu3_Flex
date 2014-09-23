@@ -184,9 +184,7 @@ protected function onMenuChange(event:MenuEvent, obj:Object = null):void {
 			case 'kind':
 				c = new KindControl();
 				break;
-			case 'uri':
-				c = new WebUrlControl();
-				break;
+
             case 'notice':
                 c = new NoticeControl();
                 break;

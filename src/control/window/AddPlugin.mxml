@@ -48,8 +48,6 @@
 
             if (plugin.hasOwnProperty("id")) {
                 appname.text = plugin.name;
-                appcode.text = plugin.appcode;
-                code.text = plugin.code;
                 desc.text = plugin.desc;
                 typeButtonGroup.selectedValue = plugin.type;
                 for each(var obj:Object in ToolUtil.userkindlist) {
@@ -57,10 +55,10 @@
                         kinDownList.selectedItem = obj;
                     }
                 }
-                iconImage.source = "/download/" + plugin.imageid;
+                iconImage.source = plugin.imageid;
                 for each(var uri:String in plugin.imagelist) {
                     var img:Image = new Image();
-                    img.source = "/download/" + uri;
+                    img.source = uri;
                     img.doubleClickEnabled = true;
                     img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                     imgGroup.addElement(img);
@@ -73,11 +71,8 @@
             this.title = result.result.name + " 新成员注册";
         }
 
-        private var upload_url:String;
-        private var upload_icon_url:String;
-
         public function save():void {
-            if (appname.text == "" || appcode.text == "" || desc.text == "") {
+            if (appname.text == "" ||  desc.text == "") {
                 Alert.show("应用名称、应用包名、应用简介必须填写", "提示");
                 return;
             }
@@ -98,23 +93,19 @@
                 obj.pluginid = plugin.id;
             }
             obj.name = appname.text;
-            obj.appcode = appcode.text;
             obj.desc = desc.text;
             obj.kind = kinDownList.selectedItem.id;
             obj.type = typeButtonGroup.selectedValue;
-            obj.code = code.text;
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginUpdate", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginUpdate", function (result:Object, e:ResultEvent):void {
                 plugin.id = result.result.pluginid;
                 dispatchEvent(new PluginEvent());
-                upload_url = result.result.upload_url;
-                upload_icon_url = result.result.upload_icon_url;
                 if (file.data) {
 
-                    proceedWithUpload(upload_icon_url);
+                    proceedWithUpload();
                 } else {
                     if (file_apk.data) {
-                        proceedWithUpload_apk(upload_url);
+                        proceedWithUpload_apk();
                     }
                 }
 
@@ -148,21 +139,21 @@
 
         //监听文件上传状态
         private function onProgress(e:ProgressEvent):void {
-//				lbProgress.text=" 已上传 " + e.bytesLoaded + " 字节，共 " + e.bytesTotal + " 字节";
+//				lbProgress.text=;
             var proc:uint = e.bytesLoaded / e.bytesTotal * 100;
             bar.setProgress(proc, 100);
-            bar.label = "当前进度: " + " " + proc + "%";
+            bar.label =" 已上传 " + e.bytesLoaded + " 字节，共 " + e.bytesTotal + " 字节。"+ " 当前进度: " + " " + proc + "%";
             if (e.bytesLoaded == e.bytesTotal) {
                 CursorManager.removeBusyCursor();
             }
         }
 
         //上传图片到服务器
-        private function proceedWithUpload(url:String):void {
+        private function proceedWithUpload():void {
 
             //进度监听
             file.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest(url);
+            var request:URLRequest = new URLRequest("/mogu/PluginIconUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
 
             request.contentType = "multipart/form-data";
@@ -216,7 +207,7 @@
             }
             bar.visible = false;
             if (file_apk.data) {
-                proceedWithUpload_apk(upload_url);
+                proceedWithUpload_apk();
             }
         }
 
@@ -251,11 +242,8 @@
             bitmapData = bitmap.bitmapData;
             appImage.source = bitmap;
 //            loader_image.contentLoaderInfo.removeEventListener(Event.COMPLETE, loaderCompleteHandler_image);
-            var obj:Object = new Object();
-            obj["pluginid"] = plugin.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginImageUpdate", function (result:Object, e:ResultEvent):void {
-                proceedWithUpload_image(result.result);
-            }, "GET").send(obj);
+            proceedWithUpload_image();
+
 
         }
 
@@ -281,7 +269,7 @@
                     appImage.source = null;
 
                     var img:Image = new Image();
-                    img.source = "/download/" + result.result;
+                    img.source = result.result;
                     img.doubleClickEnabled = true;
                     img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                     imgGroup.addElement(img);
@@ -314,7 +302,7 @@
                 var r:Array = imgurl.split("/");
                 data["imagekey"] = r[r.length - 1];
                 data["pluginid"] = plugin.id;
-                HttpServiceUtil.getCHTTPServiceAndResult("/DeleteAppImage", delImageResult, "POST").send(data);
+                HttpServiceUtil.getCHTTPServiceAndResult("/mogu/DeleteAppImage", delImageResult, "POST").send(data);
             }
         }
 
@@ -364,13 +352,12 @@
         }
 
         //上传图片到服务器
-        private function proceedWithUpload_apk(url:String):void {
+        private function proceedWithUpload_apk():void {
 
             //进度监听
             file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest(url);
+            var request:URLRequest = new URLRequest("/mogu/PluginApkUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
-
             request.contentType = "multipart/form-data";
 
             bar.visible = true;
@@ -424,10 +411,10 @@
         }
 
         //上传图片到服务器
-        private function proceedWithUpload_image(url:String):void {
+        private function proceedWithUpload_image():void {
             //进度监听
             file_image.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest(url);
+            var request:URLRequest = new URLRequest("/mogu/PluginImageUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
             request.contentType = "multipart/form-data";
             bar.visible = true;
@@ -465,14 +452,6 @@
                 <s:RadioButton value="1" group="{typeButtonGroup}" label="积分"></s:RadioButton>
                 <s:RadioButton value="2" group="{typeButtonGroup}" label="多人"></s:RadioButton>
             </s:FormItem>
-            <s:FormItem  label="应用code:" textAlign="right">
-                <s:TextInput id="code"  width="200"  tabIndex="5" >
-                </s:TextInput>
-            </s:FormItem>
-            <s:FormItem  label="应用包名:" textAlign="right">
-                <s:TextInput id="appcode"  width="200"  tabIndex="5" >
-                </s:TextInput>
-            </s:FormItem>
             <s:FormItem  label="应用介绍:" textAlign="right">
                 <s:TextArea id="desc" width="200" height="100"></s:TextArea>
             </s:FormItem>
@@ -491,7 +470,7 @@
                 <s:layout>
                     <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
                 </s:layout>
-                <s:Image id="apkImage" source="/image/apk.png" visible="false" width="50" height="50"></s:Image>
+                <s:Image id="apkImage" source="/static/image/apk.png" visible="false" width="50" height="50"></s:Image>
                 <s:Button label="选择文件" click="chooseApk()"></s:Button>
             </s:FormItem>
             <s:FormItem>

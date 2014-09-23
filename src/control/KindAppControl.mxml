@@ -39,7 +39,7 @@
             var obj:Object = new Object();
             obj['kindid'] = kindGrid.selectedItem.id;
             obj['pluginid'] = appDownList.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginAddKind", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginAddKind", function (result:Object, e:ResultEvent):void {
                 getApkList();
             }, "get").send(obj);
         }
@@ -53,7 +53,7 @@
             var obj:Object = new Object();
             obj['kindid'] = kindGrid.selectedItem.id;
             obj['pluginid'] = pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginTop", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginTop", function (result:Object, e:ResultEvent):void {
                 getApkList();
             }, "get").send(obj);
         }
@@ -66,7 +66,7 @@
             var obj:Object = new Object();
             obj['kindid'] = kindGrid.selectedItem.id;
             obj['pluginid'] = pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginOutKind", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginOutKind", function (result:Object, e:ResultEvent):void {
                 getApkList();
             }, "get").send(obj);
         }
@@ -114,7 +114,7 @@
                 return;
             }
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginList", getApkListResult, "get").send(data);
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginList", getApkListResult, "get").send(data);
         }
 
         private function getApkListResult(result:Object, e:ResultEvent):void {

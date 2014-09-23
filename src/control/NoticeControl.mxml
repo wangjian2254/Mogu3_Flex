@@ -67,7 +67,7 @@
         public function getApkList(e:Error = null):void {
             var data:Object = getData();
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeList", getApkListResult, "get").send(data);
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/NoticeList", getApkListResult, "get").send(data);
         }
 
         private function getApkListResult(result:Object, e:ResultEvent):void {
@@ -121,7 +121,7 @@
             }
             var data:Object = new Object();
             data["id"] = pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeDetail", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/NoticeDetail", function (result:Object, e:ResultEvent):void {
                 var p:AddNotice = PopUpManager.createPopUp(FlexGlobals.topLevelApplication as DisplayObject, AddNotice, true) as AddNotice;
                 p.notice = result.result;
                 p.addEventListener(PluginEvent.PluginChange, function (e:Event):void {
@@ -156,7 +156,7 @@
 
             var obj:Object = new Object();
             obj.id = pluginGrid.selectedItem.id;
-            HttpServiceUtil.getCHTTPServiceAndResult("/NoticeDelete", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/NoticeDelete", function (result:Object, e:ResultEvent):void {
                 getApkList();
             }, "get").send(obj);
         }

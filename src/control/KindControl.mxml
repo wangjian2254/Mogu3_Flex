@@ -39,7 +39,7 @@
             obj.name = nameInput.text;
             obj.type = typeDownList.selectedItem.id;
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindUpdate", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/KindUpdate", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
                 kind.id = result.result;
             }, "POST").send(obj);
@@ -53,7 +53,7 @@
                 Alert.show("请选择一个分类");
                 return;
             }
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindDelete", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/KindDelete", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
                 clearKind();
             }, "POST").send(obj);
@@ -68,7 +68,7 @@
                 return;
             }
             obj['fx'] = "down";
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindMove", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/KindMove", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
             }, "POST").send(obj);
         }
@@ -82,7 +82,7 @@
                 return;
             }
             obj['fx'] = "up";
-            HttpServiceUtil.getCHTTPServiceAndResult("/KindMove", function (result:Object, e:ResultEvent):void {
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/KindMove", function (result:Object, e:ResultEvent):void {
                 ToolUtil.kindListRefresh();
             }, "POST").send(obj);
         }

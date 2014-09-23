@@ -59,15 +59,10 @@
                 return;
             }
             obj.updatedesc = desc.text;
+            if (file_apk.data) {
+                proceedWithUpload_apk(obj);
+            }
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/PluginApkUpdate", function (result:Object, e:ResultEvent):void {
-                plugin.id = result.result.pluginid;
-                dispatchEvent(new PluginEvent());
-                var upload_url:String = result.result.upload_url;
-                if (file_apk.data) {
-                    proceedWithUpload_apk(upload_url);
-                }
-            }, "POST").send(obj);
 
         }
 
@@ -118,15 +113,15 @@
         }
 
         //上传图片到服务器
-        private function proceedWithUpload_apk(url:String):void {
+        private function proceedWithUpload_apk(data:Object):void {
 
             //进度监听
             file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
-            var request:URLRequest = new URLRequest(url);
+            var request:URLRequest = new URLRequest("/mogu/PluginApkUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
 
             request.contentType = "multipart/form-data";
-
+            request.data = data;
             bar.visible = true;
 
 
@@ -185,7 +180,7 @@
                 <s:layout>
                     <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
                 </s:layout>
-                <s:Image id="apkImage" source="/image/apk.png" visible="false" width="50" height="50"></s:Image>
+                <s:Image id="apkImage" source="/static/image/apk.png" visible="false" width="50" height="50"></s:Image>
                 <s:Button label="选择文件" click="chooseApk()"></s:Button>
             </s:FormItem>
             <s:FormItem>
