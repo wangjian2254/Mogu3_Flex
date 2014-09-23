@@ -76,16 +76,16 @@
                 Alert.show("应用名称、应用包名、应用简介必须填写", "提示");
                 return;
             }
-            if (!plugin.hasOwnProperty("id")) {
-                if (iconImage.source == null) {
-                    Alert.show("请选择应用图标", "提示");
-                    return;
-                }
-                if (!apkImage.visible) {
-                    Alert.show("请选择需要上传的apk", "提示");
-                    return;
-                }
-            }
+//            if (!plugin.hasOwnProperty("id")) {
+//                if (iconImage.source == null) {
+//                    Alert.show("请选择应用图标", "提示");
+//                    return;
+//                }
+//                if (!apkImage.visible) {
+//                    Alert.show("请选择需要上传的apk", "提示");
+//                    return;
+//                }
+//            }
 
             var obj:Object = new Object();
 
@@ -337,13 +337,12 @@
         private function uploadImageResult_apk(e:DataEvent):void {
             try {
                 var result:Object = JParser.decode(e.data);
-                if (result.success == true) {
-                    Alert.show(result.message, "提示");
-                    dispatchEvent(new PluginEvent());
-                    file_apk = new FileReference();
-                    file_apk.addEventListener(Event.SELECT, fileReferenceSelectHandler_apk);
-                    file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
-                }
+                Alert.show(result.message, "提示");
+                dispatchEvent(new PluginEvent());
+                file_apk = new FileReference();
+                file_apk.addEventListener(Event.SELECT, fileReferenceSelectHandler_apk);
+                file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
+                apkImage.visible = false;
             } catch (error:Error) {
 
                 var i:Number = 1;
