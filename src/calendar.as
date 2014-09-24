@@ -60,7 +60,6 @@ private function currentUser(result:Object, e:ResultEvent):void {
 			userinfoGroup2.visible = false;
 			userinfoGroup.visible = true;
 //            ChatManager.loginChat();
-
 		}
 		menuXML.send();
 		ToolUtil.init();

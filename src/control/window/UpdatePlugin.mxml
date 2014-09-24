@@ -50,7 +50,7 @@
             }
 
 
-            var obj:Object = new Object();
+            var obj:URLVariables =  new URLVariables();
 
             if (plugin.hasOwnProperty("id")) {
                 obj.pluginid = plugin.id;
