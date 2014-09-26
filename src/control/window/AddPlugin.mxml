@@ -153,6 +153,7 @@
 
             //进度监听
             file.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            file.addEventListener(IOErrorEvent.IO_ERROR, uploadFinish);
             var request:URLRequest = new URLRequest("/mogu/PluginIconUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
 
@@ -355,6 +356,7 @@
 
             //进度监听
             file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            file_apk.addEventListener(IOErrorEvent.IO_ERROR, uploadFinish);
             var request:URLRequest = new URLRequest("/mogu/PluginApkUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
             request.contentType = "multipart/form-data";
@@ -413,6 +415,7 @@
         private function proceedWithUpload_image():void {
             //进度监听
             file_image.addEventListener(ProgressEvent.PROGRESS, onProgress);
+            file_image.addEventListener(IOErrorEvent.IO_ERROR, uploadFinish);
             var request:URLRequest = new URLRequest("/mogu/PluginImageUpload?pluginid="+plugin.id);
             request.method = URLRequestMethod.POST;
             request.contentType = "multipart/form-data";
@@ -425,6 +428,11 @@
                 Alert.show("上传失败");
                 bar.visible = false;
             }
+        }
+
+        private function uploadFinish(e:IOErrorEvent):void{
+                bar.visible = false;
+                Alert.show("上传失败","提示");
         }
         ]]>
 	</fx:Script>
