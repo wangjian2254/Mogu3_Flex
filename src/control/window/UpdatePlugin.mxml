@@ -101,8 +101,9 @@
         private function uploadImageResult_apk(e:DataEvent):void {
             try {
                 var result:Object = JParser.decode(e.data);
+                Alert.show(result.message, "提示");
                 if (result.success == true) {
-                    Alert.show(result.message, "提示");
+
                     dispatchEvent(new PluginEvent());
                 }
             } catch (error:Error) {
