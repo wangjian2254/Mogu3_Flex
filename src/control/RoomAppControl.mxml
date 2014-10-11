@@ -68,7 +68,7 @@
 
         public function getApkList(e:Error = null):void {
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/RoomPluginList", getApkListResult, "get").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/RoomPluginList", getApkListResult, "get").send();
         }
 
         private function getApkListResult(result:Object, e:ResultEvent):void {

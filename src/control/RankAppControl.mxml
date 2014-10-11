@@ -68,7 +68,7 @@
 
         public function getApkList(e:Error = null):void {
 
-            HttpServiceUtil.getCHTTPServiceAndResult("/RankPluginList",getApkListResult, "get").send();
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/RankPluginList",getApkListResult, "get").send();
         }
 
         private function getApkListResult(result:Object, e:ResultEvent):void {

@@ -22,7 +22,7 @@
         private var list:ArrayCollection = new ArrayCollection();
         [Bindable]
         private var btnlist:ArrayCollection = new ArrayCollection([
-            {label: "置顶", icon: saveimg, mod: "down"},
+            {label: "移到顶端", icon: saveimg, mod: "down"},
             {label: "移出分类", icon: saveimg, mod: "out"}
         ]);
 

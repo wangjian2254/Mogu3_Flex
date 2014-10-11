@@ -63,6 +63,10 @@
                     img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                     imgGroup.addElement(img);
                 }
+                apkFormItem.visible=true;
+                codeLabel.text = plugin.id;
+            }else{
+                apkFormItem.visible=false;
             }
         }
 
@@ -73,7 +77,7 @@
 
         public function save():void {
             if (appname.text == "" ||  desc.text == "") {
-                Alert.show("应用名称、应用包名、应用简介必须填写", "提示");
+                Alert.show("应用名称、应用简介必须填写", "提示");
                 return;
             }
 //            if (!plugin.hasOwnProperty("id")) {
@@ -99,6 +103,8 @@
 
             HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginUpdate", function (result:Object, e:ResultEvent):void {
                 plugin.id = result.result.pluginid;
+                codeLabel.text = plugin.id;
+                apkFormItem.visible=true;
                 dispatchEvent(new PluginEvent());
                 if (file.data) {
 
@@ -449,8 +455,16 @@
             </s:layout>
 
             <s:FormItem id="orgNameItem" label="应用名称:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                </s:layout>
                 <s:TextInput id="appname"  width="200"  tabIndex="5" >
                 </s:TextInput>
+                <s:Label text="*" color="red" />
+            </s:FormItem>
+            <s:FormItem id="codeFormItem" label="应用code:" textAlign="right">
+
+                <s:Label id="codeLabel" ></s:Label>
             </s:FormItem>
             <s:FormItem  label="应用类型:" textAlign="right">
                 <s:layout>
@@ -461,7 +475,11 @@
                 <s:RadioButton value="2" group="{typeButtonGroup}" label="多人"></s:RadioButton>
             </s:FormItem>
             <s:FormItem  label="应用介绍:" textAlign="right">
+                <s:layout>
+                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
+                </s:layout>
                 <s:TextArea id="desc" width="200" height="100"></s:TextArea>
+                <s:Label text="*" color="red" />
             </s:FormItem>
             <s:FormItem  label="应用分类:" textAlign="right">
                 <s:DropDownList id="kinDownList" dataProvider="{ToolUtil.userkindlist}" labelField="name" selectedIndex="0" width="200"></s:DropDownList>
@@ -474,7 +492,7 @@
                 <s:Button label="选择图片" click="chooseImage()"></s:Button>
             </s:FormItem>
 
-            <s:FormItem  label="apk:" textAlign="right">
+            <s:FormItem  label="apk:" textAlign="right" id="apkFormItem">
                 <s:layout>
                     <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
                 </s:layout>
