@@ -254,7 +254,7 @@
                                 </s:GridColumn>
                                 <s:GridColumn dataField="code" headerText="应用code" width="100">
                                 </s:GridColumn>
-                                <s:GridColumn dataField="lastUpdateTime" headerText="最后修改日期"  width="110">
+                                <s:GridColumn dataField="lastUpdateTime" headerText="上传时间"  width="110">
                                 </s:GridColumn>
                                 <s:GridColumn dataField="isactive" dataTipField="status" labelFunction="activefun"  headerText="状态">
                                 </s:GridColumn>
