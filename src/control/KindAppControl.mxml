@@ -20,27 +20,41 @@
 
         [Bindable]
         private var list:ArrayCollection = new ArrayCollection();
+
+        [Bindable]
+        private var unkindpluginlist:ArrayCollection = new ArrayCollection();
         [Bindable]
         private var btnlist:ArrayCollection = new ArrayCollection([
             {label: "移到顶端", icon: saveimg, mod: "down"},
+            {label: "上移", icon: saveimg, mod: "u"},
+            {label: "下移", icon: saveimg, mod: "d"},
             {label: "移出分类", icon: saveimg, mod: "out"}
         ]);
 
         override public function init(e:FlexEvent):void {
             pageing.addEventListener(PageChangeEvent.PageChange_EventStr, pagechange);
+            unkindpage.addEventListener(PageChangeEvent.PageChange_EventStr, unkindpagechange);
         }
 
+        private function selectedPlugins():void{
+            kindAddButton.label = "加入分类("+allpluginGrid.selectedItems.length+"个插件)";
+        }
 
         private function save():void {
-            if (!kindGrid.selectedItem || !appDownList.selectedItem) {
+            if (!kindGrid.selectedItem || allpluginGrid.selectedItems.length==0) {
                 Alert.show("请选择分类和应用")
                 return;
             }
             var obj:Object = new Object();
             obj['kindid'] = kindGrid.selectedItem.id;
-            obj['pluginid'] = appDownList.selectedItem.id;
+            obj['pluginids'] = [];
+            for each(var item:Object in allpluginGrid.selectedItems){
+                obj['pluginids'].push(item.id);
+            }
             HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginAddKind", function (result:Object, e:ResultEvent):void {
                 getApkList();
+                getUnkindApkList();
+                kindAddButton.label = "加入分类";
             }, "get").send(obj);
         }
 
@@ -53,6 +67,7 @@
             var obj:Object = new Object();
             obj['kindid'] = kindGrid.selectedItem.id;
             obj['pluginid'] = pluginGrid.selectedItem.id;
+            selectedid = pluginGrid.selectedItem.id;
             HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginTop", function (result:Object, e:ResultEvent):void {
                 getApkList();
             }, "get").send(obj);
@@ -68,13 +83,39 @@
             obj['pluginid'] = pluginGrid.selectedItem.id;
             HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginOutKind", function (result:Object, e:ResultEvent):void {
                 getApkList();
+                getUnkindApkList();
+            }, "get").send(obj);
+        }
+
+        private var selectedid:int=0;
+
+        private function appUp(u:Boolean):void{
+            if (!kindGrid.selectedItem || !pluginGrid.selectedItem) {
+                Alert.show("请选择分类和应用")
+                return;
+            }
+
+
+            var obj:Object = new Object();
+            obj['kindid'] = kindGrid.selectedItem.id;
+            obj['pluginid'] = pluginGrid.selectedItem.id;
+            if(u){
+                obj['flag']='u';
+            }else{
+                obj['flag']='d';
+            }
+            selectedid = pluginGrid.selectedItem.id;
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginMoveKind", function (result:Object, e:ResultEvent):void {
+                getApkList();
             }, "get").send(obj);
         }
 
         private function selectKind():void {
             if (kindGrid.selectedIndex >= 0) {
                 list.removeAll();
+                unkindpluginlist.removeAll();
                 getApkList();
+                getUnkindApkList()
             }
         }
 
@@ -85,6 +126,12 @@
                     break;
                 case "out":
                     appOut();
+                    break;
+                case "u":
+                    appUp(true);
+                    break;
+                case "d":
+                    appUp(false);
                     break;
             }
         }
@@ -128,6 +175,15 @@
             }
             list.removeAll();
             list.addAll(new ArrayCollection(result.result.list as Array));
+            if(selectedid>0){
+                for each(var obj:Object in list){
+                    if(obj.id == selectedid){
+                        pluginGrid.selectedItem = obj;
+                    }
+                }
+                selectedid = 0;
+            }
+
 
         }
 
@@ -141,8 +197,48 @@
             return o;
         }
 
+        public function getUnkindApkList():void {
+            var data:Object = getUnkindData();
+            if (!data.hasOwnProperty("kind")) {
+                return;
+            }
+
+            HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginUnKindList", getUnkindApkListResult, "get").send(data);
+        }
+
+        private function getUnkindApkListResult(result:Object, e:ResultEvent):void {
+            if (unkindpluginlist.length == 0) {
+                unkindpage.mPageSize = 30;
+                unkindpage.RecordCount = result.result.count;
+                unkindpage.initPage();
+            }
+            if (unkindpage.RecordCount != result.result.count) {
+                unkindpage.RecordCount = result.result.count;
+            }
+            unkindpluginlist.removeAll();
+            unkindpluginlist.addAll(new ArrayCollection(result.result.list as Array));
+
+
+
+        }
+
+
+        public function getUnkindData():Object {
+            var o:Object = {};
+            if (unkindpluginlist.length > 0) {
+                o['page'] = unkindpage.PageIndex;
+            }
+            o['kind'] = kindGrid.selectedItem.id;
+            return o;
+        }
+
         private function pagechange(e:PageChangeEvent):void {
             getApkList();
+
+        }
+
+        private function unkindpagechange(e:PageChangeEvent):void {
+            getUnkindApkList();
 
         }
 
@@ -177,9 +273,7 @@
             return "";
         }
 
-        private function selectedApp():void {
-            appImage.source = appDownList.selectedItem.icon;
-        }
+
 
         private function statusLabel(item:Object, column:GridColumn):String {
             for each(var person:Object in ToolUtil.kindTypeList) {
@@ -218,24 +312,37 @@
                         </s:ArrayList>
                     </s:columns>
                 </s:DataGrid>
-                <s:VGroup width="100%" height="100%">
-                    <s:Form>
-                        <s:FormItem label="应用">
-                            <s:layout>
-                                <s:HorizontalLayout gap="10"></s:HorizontalLayout>
-                            </s:layout>
-                            <s:DropDownList id="appDownList" dataProvider="{ToolUtil.pluginList}" selectedIndex="0"  labelField="name" change="selectedApp()"></s:DropDownList>
-                            <s:Image id="appImage"  height="40"></s:Image>
-                        </s:FormItem>
-                        <s:FormItem>
-                            <s:layout>
-                                <s:HorizontalLayout gap="10"/>
-                            </s:layout>
-                            <s:Button label="加入分类" click="save()" chromeColor="red" color="#ffffff" height="25"  tabIndex="10">
-                            </s:Button>
+                <s:VGroup width="300" height="100%" gap="5">
+                    <s:HGroup gap="10">
+                        <s:Button id="kindAddButton" label="加入分类" height="25" width="120" click="save()" ></s:Button>
+                        <s:Label text="按住 Ctrl 键可多选 "></s:Label>
+                    </s:HGroup>
 
-                        </s:FormItem>
-                    </s:Form>
+
+                    <s:DataGrid id="allpluginGrid" width="100%" height="100%" rowHeight="30" selectionChange="selectedPlugins()" selectionMode="multipleRows"  dataProvider="{unkindpluginlist}">
+                        <s:columns>
+                            <s:ArrayList>
+                                <s:GridColumn dataField="name" headerText="应用名称" width="120" dataTipField="appcode">
+                                </s:GridColumn>
+                                <s:GridColumn dataField="icon" headerText="应用图标" width="65">
+                                    <s:itemRenderer>
+                                        <fx:Component>
+                                            <s:GridItemRenderer>
+                                                <s:HGroup width="100%" height="100%" verticalAlign="middle" gap="5" paddingLeft="5" paddingTop="3" paddingRight="3">
+                                                    <s:Image source="{data.imageid}" height="30" width="30"></s:Image>
+                                                </s:HGroup>
+                                            </s:GridItemRenderer>
+                                        </fx:Component>
+                                    </s:itemRenderer>
+                                </s:GridColumn>
+                                <s:GridColumn dataField="username" headerText="作者">
+                                </s:GridColumn>
+                            </s:ArrayList>
+                        </s:columns>
+                    </s:DataGrid>
+                    <uicontrol:Pageing id="unkindpage"></uicontrol:Pageing>
+                </s:VGroup>
+                <s:VGroup width="100%" height="100%">
                     <s:DataGrid id="pluginGrid" width="100%" height="100%" rowHeight="30" dataProvider="{list}">
                         <s:columns>
                             <s:ArrayList>
@@ -256,8 +363,7 @@
                                 </s:GridColumn>
                                 <s:GridColumn dataField="lastUpdateTime" headerText="上传时间"  width="110">
                                 </s:GridColumn>
-                                <s:GridColumn dataField="isactive" dataTipField="status" labelFunction="activefun"  headerText="状态">
-                                </s:GridColumn>
+
                                 <s:GridColumn dataField="type" labelFunction="typefun" headerText="应用类型">
                                 </s:GridColumn>
                                 <s:GridColumn dataField="downnum" headerText="下载量">

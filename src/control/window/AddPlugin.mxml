@@ -33,7 +33,9 @@
 
 
         private function init():void {
-
+            if(ToolUtil.sessionUser.auth == 'admin'){
+                changepage.visible=true;
+            }
             file = new FileReference();
             file.addEventListener(Event.SELECT, fileReferenceSelectHandler);
             file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult);
@@ -63,10 +65,9 @@
                     img.addEventListener(MouseEvent.DOUBLE_CLICK, deleteImage);
                     imgGroup.addElement(img);
                 }
-                apkFormItem.visible=true;
-                codeLabel.text = plugin.id;
+                apkLabel.visible = false;
             }else{
-                apkFormItem.visible=false;
+                apkLabel.visible = true;
             }
         }
 
@@ -80,16 +81,13 @@
                 Alert.show("应用名称、应用简介必须填写", "提示");
                 return;
             }
-//            if (!plugin.hasOwnProperty("id")) {
-//                if (iconImage.source == null) {
-//                    Alert.show("请选择应用图标", "提示");
-//                    return;
-//                }
-//                if (!apkImage.visible) {
-//                    Alert.show("请选择需要上传的apk", "提示");
-//                    return;
-//                }
-//            }
+            if (!plugin.hasOwnProperty("id")) {
+
+                if (!apkImage.visible) {
+                    Alert.show("请选择需要上传的apk", "提示");
+                    return;
+                }
+            }
 
             var obj:Object = new Object();
 
@@ -103,12 +101,14 @@
 
             HttpServiceUtil.getCHTTPServiceAndResult("/mogu/PluginUpdate", function (result:Object, e:ResultEvent):void {
                 plugin.id = result.result.pluginid;
-                codeLabel.text = plugin.id;
-                apkFormItem.visible=true;
                 dispatchEvent(new PluginEvent());
                 if (file.data) {
 
                     proceedWithUpload();
+                } else {
+                    if (file_apk.data) {
+                        proceedWithUpload_apk();
+                    }
                 }
 
 
@@ -210,6 +210,11 @@
             }
             bar.visible = false;
 
+            if (file_apk.data) {
+                proceedWithUpload_apk();
+            }
+
+
         }
 
         //载入本地图片
@@ -285,6 +290,7 @@
                 var i:Number = 1;
             }
             bar.visible = false;
+
         }
 
         private var imgurl:String;
@@ -327,10 +333,13 @@
             apkImage.visible = true;
 
             file_apk.addEventListener(Event.COMPLETE,function(event:Event):void{
-                uploadButton.label = "提交";
-                uploadButton.enabled = true;
+                tjButton.enabled = true;
+                tjButton.setStyle("color",0xffffff);
+                tjButton.label = "提交";
             });
-            uploadButton.label = "正在加载";
+            tjButton.enabled = false;
+            tjButton.setStyle("color",0x000000);
+            tjButton.label = "正在加载";
             file_apk.load();
         }
 
@@ -350,12 +359,6 @@
             bar.visible = false;
         }
 
-        private function upload_apkfile():void{
-            if (file_apk.data) {
-                proceedWithUpload_apk();
-                uploadButton.enabled = false;
-            }
-        }
 
         //上传图片到服务器
         private function proceedWithUpload_apk():void {
@@ -363,7 +366,7 @@
             //进度监听
             file_apk.addEventListener(ProgressEvent.PROGRESS, onProgress);
             file_apk.addEventListener(IOErrorEvent.IO_ERROR, uploadFinish);
-            var request:URLRequest = new URLRequest("/mogu/PluginApkUpload?pluginid="+plugin.id);
+            var request:URLRequest = new URLRequest("/mogu/PluginApkUpload?pluginid="+plugin.id+"&changepage="+changepage.selected);
             request.method = URLRequestMethod.POST;
             request.contentType = "multipart/form-data";
 
@@ -462,10 +465,6 @@
                 </s:TextInput>
                 <s:Label text="*" color="red" />
             </s:FormItem>
-            <s:FormItem id="codeFormItem" label="应用code:" textAlign="right">
-
-                <s:Label id="codeLabel" ></s:Label>
-            </s:FormItem>
             <s:FormItem  label="应用类型:" textAlign="right">
                 <s:layout>
                     <s:HorizontalLayout gap="10"></s:HorizontalLayout>
@@ -491,6 +490,15 @@
                 <s:Image id="iconImage" width="50" height="50"></s:Image>
                 <s:Button label="选择图片" click="chooseImage()"></s:Button>
             </s:FormItem>
+            <s:FormItem  label="apk:" textAlign="right" >
+                <s:layout>
+                    <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
+                </s:layout>
+                <s:Image id="apkImage" source="/static/image/apk.png" visible="false" width="50" height="50"></s:Image>
+                <s:Button label="选择文件" click="chooseApk()" ></s:Button>
+                <s:Label id="apkLabel" text="*" color="red" />
+                <s:CheckBox id="changepage" label="反山寨" color="red" selected="false" visible="false"/>
+            </s:FormItem>
             <s:FormItem>
                 <s:layout>
                     <s:HorizontalLayout gap="10"/>
@@ -502,14 +510,7 @@
 
             </s:FormItem>
 
-            <s:FormItem  label="apk:" textAlign="right" id="apkFormItem">
-                <s:layout>
-                    <s:HorizontalLayout gap="10" verticalAlign="top"></s:HorizontalLayout>
-                </s:layout>
-                <s:Image id="apkImage" source="/static/image/apk.png" visible="false" width="50" height="50"></s:Image>
-                <s:Button label="选择文件" click="chooseApk()" enabled="{!uploadButton.enabled}"></s:Button>
-                <s:Button label="上传" id="uploadButton" enabled="false" click="upload_apkfile()"></s:Button>
-            </s:FormItem>
+
 
         </s:Form>
         <s:VGroup id="appImageGroup" width="450" height="100%" horizontalAlign="left" paddingTop="5">
