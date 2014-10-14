@@ -85,7 +85,7 @@
             }
             var obj:Object = new Object();
             if (notice.hasOwnProperty("id")) {
-                obj.pluginid = notice.id;
+                obj.id = notice.id;
             }
             obj.title = appname.text;
             obj.type = typeButtonGroup.selectedValue;
