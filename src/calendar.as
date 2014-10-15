@@ -60,6 +60,10 @@ private function currentUser(result:Object, e:ResultEvent):void {
 			userinfoGroup2.visible = false;
 			userinfoGroup.visible = true;
 //            ChatManager.loginChat();
+            var event1:MenuEvent = new MenuEvent(MenuEvent.CHANGE);
+            var xml1:XML = new XML("<menuitem label='应用管理' mod='apkadd'></menuitem>");
+            event1.item = xml1;
+            onMenuChange(event1);
 		}
 		menuXML.send();
 		ToolUtil.init();

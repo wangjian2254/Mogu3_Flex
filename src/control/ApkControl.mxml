@@ -43,6 +43,7 @@
         override public function changeCurrentUser(e:ChangeUserEvent):void {
             buttonArr1.removeAll();
             if (ToolUtil.sessionUser.auth == "admin") {
+                key.visible = true;
                 pageing.enabled = true;
                 buttonArr1.addAll(new ArrayCollection([
                     {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
@@ -54,6 +55,7 @@
                     {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
                 ]));
             } else {
+                key.visible = false;
                 pageing.enabled = false;
                 buttonArr1.addAll(new ArrayCollection([
                     {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
@@ -101,6 +103,9 @@
             var o:Object = {};
             if (list.length > 0) {
                 o['page'] = pageing.PageIndex;
+            }
+            if(key.text.length>0){
+                o['search'] = key.text;
             }
             return o;
         }
@@ -317,9 +322,9 @@
                 <mx:ButtonBar id="ba1" dataProvider="{buttonArr1}" doubleClickEnabled="true"  chromeColor="#faf0cc"  labelField="label" iconField="ico"  height="30"  itemClick="clickHander(event)" >
                 </mx:ButtonBar>
                 <s:Spacer width="20"></s:Spacer>
-				<!--<s:Label text="查找：" />-->
-				<!--<s:TextInput width="100" id="key" />-->
-				<!--<s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="search()" />-->
+				<s:Label text="查找：" visible="{key.visible}" />
+				<s:TextInput width="100" id="key" />
+				<s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="getApkList()"  visible="{key.visible}"  />
 
 
 			</s:BorderContainer>

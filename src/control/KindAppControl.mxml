@@ -229,6 +229,9 @@
                 o['page'] = unkindpage.PageIndex;
             }
             o['kind'] = kindGrid.selectedItem.id;
+            if(key.text.length){
+                o['search'] = key.text;
+            }
             return o;
         }
 
@@ -316,6 +319,11 @@
                     <s:HGroup gap="10">
                         <s:Button id="kindAddButton" label="加入分类" height="25" width="120" click="save()" ></s:Button>
                         <s:Label text="按住 Ctrl 键可多选 "></s:Label>
+                    </s:HGroup>
+                    <s:HGroup gap="10">
+                        <s:Label text="查找：" visible="{key.visible}" />
+                        <s:TextInput width="100" id="key" />
+                        <s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="getUnkindApkList()"  visible="{key.visible}"  />
                     </s:HGroup>
 
 
