@@ -49,7 +49,7 @@
             file_apk.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, uploadImageResult_apk);
 
             if (plugin.hasOwnProperty("id")) {
-                appname.text = plugin.name;
+                this.title = plugin.name;
                 desc.text = plugin.desc;
                 typeButtonGroup.selectedValue = plugin.type;
                 for each(var obj:Object in ToolUtil.userkindlist) {
@@ -77,10 +77,7 @@
         }
 
         public function save():void {
-            if (appname.text == "" ||  desc.text == "") {
-                Alert.show("应用名称、应用简介必须填写", "提示");
-                return;
-            }
+
             if (!plugin.hasOwnProperty("id")) {
 
                 if (!apkImage.visible) {
@@ -94,7 +91,6 @@
             if (plugin.hasOwnProperty("id")) {
                 obj.pluginid = plugin.id;
             }
-            obj.name = appname.text;
             obj.desc = desc.text;
             obj.kind = kinDownList.selectedItem.id;
             obj.type = typeButtonGroup.selectedValue;
@@ -457,28 +453,20 @@
                 <s:FormLayout gap="0"></s:FormLayout>
             </s:layout>
 
-            <s:FormItem id="orgNameItem" label="应用名称:" textAlign="right">
-                <s:layout>
-                    <s:HorizontalLayout gap="10"></s:HorizontalLayout>
-                </s:layout>
-                <s:TextInput id="appname"  width="200"  tabIndex="5" >
-                </s:TextInput>
-                <s:Label text="*" color="red" />
-            </s:FormItem>
+
             <s:FormItem  label="应用类型:" textAlign="right">
                 <s:layout>
                     <s:HorizontalLayout gap="10"></s:HorizontalLayout>
                 </s:layout>
                 <s:RadioButton value="0" group="{typeButtonGroup}" selected="true" label="单机"></s:RadioButton>
                 <s:RadioButton value="1" group="{typeButtonGroup}" label="积分"></s:RadioButton>
-                <s:RadioButton value="2" group="{typeButtonGroup}" label="多人"></s:RadioButton>
+                <s:RadioButton value="2" group="{typeButtonGroup}" label="多人" visible="false"></s:RadioButton>
             </s:FormItem>
             <s:FormItem  label="应用介绍:" textAlign="right">
                 <s:layout>
                     <s:HorizontalLayout gap="10"></s:HorizontalLayout>
                 </s:layout>
                 <s:TextArea id="desc" width="200" height="100"></s:TextArea>
-                <s:Label text="*" color="red" />
             </s:FormItem>
             <s:FormItem  label="应用分类:" textAlign="right">
                 <s:DropDownList id="kinDownList" dataProvider="{ToolUtil.userkindlist}" labelField="name" selectedIndex="0" width="200"></s:DropDownList>
