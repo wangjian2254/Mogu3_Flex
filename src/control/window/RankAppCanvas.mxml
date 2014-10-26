@@ -43,7 +43,7 @@
                 return;
             }
             var obj:Object = new Object();
-            obj['pluginid'] = plugin.appcode;
+            obj['pluginid'] = plugin.id;
             obj['rankmodel'] = rankmodel.selectedItem.id;
             obj['num'] = ranklist.length;
             var i:int = 0;
