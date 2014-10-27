@@ -44,6 +44,8 @@
             buttonArr1.removeAll();
             if (ToolUtil.sessionUser.auth == "admin") {
                 key.visible = true;
+                keyLabel.visible = true;
+                keyButton.visible = true;
                 pageing.enabled = true;
                 buttonArr1.addAll(new ArrayCollection([
                     {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
@@ -56,11 +58,14 @@
                 ]));
             } else {
                 key.visible = false;
+                keyLabel.visible = false;
+                keyButton.visible = false;
                 pageing.enabled = false;
                 buttonArr1.addAll(new ArrayCollection([
                     {'label': '添加应用', 'ico': addimg, 'mode': 'add'},
                     {'label': '修改应用信息', 'ico': saveimg, 'mode': 'update'},
                     {'label': '上传新版本应用', 'ico': saveimg, 'mode': 'upload'},
+                    {'label': '设置等级', 'ico': wximg, 'mode': 'setrank'},
                     {'label': '删除应用', 'ico': delimg, 'mode': 'del'},
                     {'label': '下载应用', 'ico': saveimg, 'mode': 'download'}
                 ]));
@@ -322,9 +327,9 @@
                 <mx:ButtonBar id="ba1" dataProvider="{buttonArr1}" doubleClickEnabled="true"  chromeColor="#faf0cc"  labelField="label" iconField="ico"  height="30"  itemClick="clickHander(event)" >
                 </mx:ButtonBar>
                 <s:Spacer width="20"></s:Spacer>
-				<s:Label text="查找：" visible="{key.visible}" />
+				<s:Label id="keyLabel" text="查找：" visible="{key.visible}" />
 				<s:TextInput width="100" id="key" />
-				<s:Button chromeColor="red" color="#ffffff" label="查找" height="25" click="getApkList()"  visible="{key.visible}"  />
+				<s:Button id="keyButton" chromeColor="red" color="#ffffff" label="查找" height="25" click="getApkList()"  visible="{key.visible}"  />
 
 
 			</s:BorderContainer>
